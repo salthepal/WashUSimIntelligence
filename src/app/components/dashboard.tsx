@@ -255,7 +255,7 @@ export function Dashboard({ reports, sessionNotes, generatedReports, lsts, isLoa
       {/* ── Intro Statement ── */}
       <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-5">
         <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-          <span className="font-bold text-slate-900 dark:text-white">WashU Sim Intelligence</span> is a clinical safety platform for the WashU Department of Emergency Medicine. It centralizes simulation data to identify <span className="font-semibold text-[#A51417]">Latent Safety Threats (LSTs)</span>, automate institutional reporting with <span className="font-semibold text-purple-600">AI synthesis</span>, and provide an <span className="font-semibold text-blue-600">intelligent, searchable repository</span> for clinical scenario data.
+          <span className="font-bold text-slate-900 dark:text-white">WashU Sim Intelligence</span> centralizes simulation data for the WashU Department of Emergency Medicine. Use it to track <span className="font-semibold text-[#A51417]">Latent Safety Threats (LSTs)</span>, draft post-session reports with <span className="font-semibold text-purple-600">AI</span>, and search a <span className="font-semibold text-blue-600">repository</span> of prior scenario data.
         </p>
       </div>
 
