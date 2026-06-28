@@ -109,7 +109,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 transition-colors">
+        <div className="min-h-screen bg-gradient-to-br from-[#f8f5ef] to-[#f0ebe2] dark:from-slate-900 dark:to-slate-800 transition-colors">
           <Toaster />
           <Joyride
             steps={tourSteps}
@@ -119,14 +119,14 @@ export default function App() {
             showSkipButton
             styles={{
               options: {
-                primaryColor: '#A51417',
+                primaryColor: '#17413f',
                 zIndex: 10000,
               },
             }}
           />
 
           {/* Header */}
-          <header className="bg-gradient-to-r from-[#A51417] to-[#8B0F12] text-white shadow-lg">
+          <header className="bg-gradient-to-r from-[#17413f] to-[#245855] text-white shadow-lg">
             <div className="px-3 md:px-6 py-2.5 md:py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -144,7 +144,7 @@ export default function App() {
                   <FileText className="w-6 h-6 md:w-7 md:h-7 flex-shrink-0" />
                   <div className="min-w-0">
                     <h1 className="text-base md:text-xl font-bold truncate">WashU Emergency Medicine: Simulation & Safety Intelligence</h1>
-                    <p className="text-xs text-red-100 truncate hidden md:block">Post-Session Report &amp; LST Management Platform</p>
+                    <p className="text-xs text-white/70 truncate hidden md:block">Post-Session Report &amp; LST Management Platform</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">

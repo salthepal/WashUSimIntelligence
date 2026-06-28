@@ -2,46 +2,49 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Shared "clinical editorial" palette — matches the hub and edu portal:
+     warm paper, deep ink, petrol + coral, Fraunces display + Spline Sans body. */
   --font-size: 16px;
-  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
-  --background: #ffffff;
-  --foreground: #030213;
-  --card: #ffffff;
-  --card-foreground: #030213;
-  --popover: #ffffff;
-  --popover-foreground: #030213;
-  --primary: #A51417; /* WashU Red */
-  --primary-foreground: #ffffff;
-  --secondary: #007A33; /* WashU Green */
-  --secondary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #f8fafc;
-  --accent-foreground: #A51417;
-  --destructive: #d4183d;
+  --font-sans: 'Spline Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --background: #f8f5ef; /* paper */
+  --foreground: #1f2523; /* ink */
+  --card: #fffdf8;
+  --card-foreground: #1f2523;
+  --popover: #fffdf8;
+  --popover-foreground: #1f2523;
+  --primary: #17413f; /* petrol */
+  --primary-foreground: #f8f5ef;
+  --secondary: #245855; /* petrol-2 */
+  --secondary-foreground: #f8f5ef;
+  --muted: #f0ebe2; /* paper-2 */
+  --muted-foreground: #59615e; /* ink-soft */
+  --accent: #f0ebe2;
+  --accent-foreground: #b94f33; /* coral */
+  --destructive: #b3402a;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #ffffff;
-  --input-background: #f8fafc;
-  --switch-background: #cbd5e1;
+  --border: #ddd5c8; /* line */
+  --input: #fffdf8;
+  --input-background: #f0ebe2;
+  --switch-background: #bfb5a5; /* line-strong */
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #A51417;
-  --chart-1: #A51417; /* Red */
-  --chart-2: #007A33; /* Green */
-  --chart-3: #002D62; /* Blue */
-  --chart-4: #f4ea14; /* Gold */
-  --chart-5: #5B6770; /* Grey */
-  --radius: 0.75rem;
-  --sidebar: #f8fafc;
-  --sidebar-foreground: #1e293b;
-  --sidebar-primary: #A51417;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e2e8f0;
-  --sidebar-accent-foreground: #A51417;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #A51417;
+  --ring: #b94f33; /* coral focus */
+  --chart-1: #17413f; /* petrol */
+  --chart-2: #b94f33; /* coral */
+  --chart-3: #245855; /* petrol-2 */
+  --chart-4: #b4791a; /* gold */
+  --chart-5: #59615e; /* ink-soft */
+  --radius: 0.375rem;
+  --sidebar: #f0ebe2; /* paper-2 */
+  --sidebar-foreground: #1f2523;
+  --sidebar-primary: #17413f;
+  --sidebar-primary-foreground: #f8f5ef;
+  --sidebar-accent: #e7e0d3;
+  --sidebar-accent-foreground: #17413f;
+  --sidebar-border: #ddd5c8;
+  --sidebar-ring: #b94f33;
 }
 
 .dark {
@@ -128,6 +131,11 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
   }
 
   /**
