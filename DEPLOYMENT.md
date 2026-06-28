@@ -27,7 +27,7 @@ Connecting the GitHub repository to Cloudflare Pages handles all production buil
 ### Pages Environment Variables
 Configure the Pages Function proxy with the production Worker URL:
 ```bash
-BACKEND_URL=https://washu-em-sim-intelligence.sphadnisuf.workers.dev
+BACKEND_URL=https://washu-sim-intel.sphadnisuf.workers.dev
 ```
 
 If `BACKEND_URL` is not set, the checked-in Pages Function falls back to the current production workers.dev endpoint.

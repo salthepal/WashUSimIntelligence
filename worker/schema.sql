@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS reports (
   content TEXT NOT NULL,
   type TEXT NOT NULL, -- 'prior_report' or 'generated_report'
   metadata TEXT, -- JSON blob
-  created_at DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS session_notes (
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS session_notes (
   participants TEXT, -- JSON array
   tags TEXT, -- JSON array
   metadata TEXT, -- JSON blob
-  created_at DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS case_files (
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS case_files (
   date TEXT,
   uploader_name TEXT,
   case_type TEXT,
-  created_at DATETIME DEFAULT (strftime("%Y-%m-%dT%H:%M:%f", "now", "utc"))
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS lsts (
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS lsts (
   recurrence_count INTEGER DEFAULT 1,
   identified_date TEXT, -- ISO Date
   last_seen_date TEXT, -- ISO Date
-  created_at DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   type TEXT NOT NULL,
   target TEXT NOT NULL,
   target_id TEXT,
-  timestamp DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS error_logs (
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS error_logs (
   message TEXT NOT NULL,
   stack TEXT,
   context TEXT, -- JSON blob
-  timestamp DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Search Index (FTS5) for Clinical Content
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS lst_history (
   new_severity TEXT,
   change_note TEXT,
   changed_by TEXT,
-  created_at DATETIME DEFAULT (strftime('%Y-%m-%dT%H:%M:%f', 'now', 'utc'))
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Optimized Indexes for Site-Filtering and Hydration

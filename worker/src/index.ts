@@ -54,8 +54,9 @@ type Bindings = {
 };
 
 const ALLOWED_ORIGINS = [
+  'https://intel.washuemsim.org',
   'https://washusimintelligence.pages.dev',
-  'https://washu-em-sim-intelligence.sphadnisuf.workers.dev',
+  'https://washu-sim-intel.sphadnisuf.workers.dev',
   'http://localhost:5173',
   'http://localhost:8787',
 ];

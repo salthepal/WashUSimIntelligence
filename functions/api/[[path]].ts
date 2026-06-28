@@ -6,7 +6,7 @@ export const onRequest = async (context: any) => {
   const path = url.pathname.replace(/^\/api/, '');
   
   // The destination backend URL (Cloudflare Worker)
-  const BACKEND_URL = context.env?.BACKEND_URL || 'https://washu-em-sim-intelligence.sphadnisuf.workers.dev';
+  const BACKEND_URL = context.env?.BACKEND_URL || 'https://washu-sim-intel.sphadnisuf.workers.dev';
   
   // Construct the new URL for the Worker
   const targetUrl = new URL(path + url.search, BACKEND_URL);
