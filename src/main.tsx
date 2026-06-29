@@ -8,18 +8,24 @@ import "./styles/index.css";
 
 const THEME_STORAGE_KEY = "washu-em-sim-theme";
 
+function getCookieTheme() {
+  const match = document.cookie.match(/(?:^|;\s*)washu-em-sim-theme=(dark|light)(?:;|$)/);
+  return match?.[1] ?? null;
+}
+
 try {
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   const legacyDarkMode = window.localStorage.getItem("darkMode");
+  const cookieTheme = getCookieTheme();
 
   if (!savedTheme && legacyDarkMode === "true") {
     window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
     document.documentElement.classList.add("dark");
   } else {
-    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    document.documentElement.classList.toggle("dark", (savedTheme ?? cookieTheme) === "dark");
   }
 } catch {
-  document.documentElement.classList.remove("dark");
+  document.documentElement.classList.toggle("dark", getCookieTheme() === "dark");
 }
 
 const queryClient = new QueryClient({

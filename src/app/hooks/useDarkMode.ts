@@ -4,6 +4,17 @@ const THEME_STORAGE_KEY = 'washu-em-sim-theme';
 const LEGACY_DARK_MODE_KEY = 'darkMode';
 type ThemePreference = 'light' | 'dark';
 
+function getCookieTheme(): ThemePreference | null {
+  const match = document.cookie.match(/(?:^|;\s*)washu-em-sim-theme=(dark|light)(?:;|$)/);
+  return match?.[1] === 'dark' || match?.[1] === 'light' ? match[1] : null;
+}
+
+function setCookieTheme(theme: ThemePreference) {
+  const host = window.location.hostname;
+  const domain = host === 'localhost' || host === '127.0.0.1' ? '' : '; domain=.washuemsim.org';
+  document.cookie = `${THEME_STORAGE_KEY}=${theme}; path=/; max-age=31536000; SameSite=Lax${domain}`;
+}
+
 function getStoredTheme(): ThemePreference {
   if (typeof window === 'undefined') return 'light';
 
@@ -13,13 +24,14 @@ function getStoredTheme(): ThemePreference {
 
     if (window.localStorage.getItem(LEGACY_DARK_MODE_KEY) === 'true') {
       window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+      setCookieTheme('dark');
       return 'dark';
     }
   } catch (error) {
     console.error('Error loading dark mode preference:', error);
   }
 
-  return 'light';
+  return getCookieTheme() ?? 'light';
 }
 
 function applyTheme(theme: ThemePreference) {
@@ -34,10 +46,11 @@ export function useDarkMode() {
 
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-      window.dispatchEvent(new CustomEvent('washu-theme-change', { detail: { theme } }));
     } catch (error) {
       console.error('Error saving dark mode preference:', error);
     }
+    setCookieTheme(theme);
+    window.dispatchEvent(new CustomEvent('washu-theme-change', { detail: { theme } }));
   }, [theme]);
 
   useEffect(() => {
