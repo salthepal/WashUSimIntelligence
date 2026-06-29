@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { X, Download, FileText } from 'lucide-react';
 import { Report, SessionNote } from '../App';
 import { toast } from 'sonner';
-import JSZip from 'jszip';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
-import { jsPDF } from 'jspdf';
 
 interface BulkExportModalProps {
   selectedIds: string[];
@@ -21,6 +18,11 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
   const exportAsZip = async () => {
     setExporting(true);
     try {
+      const [{ default: JSZip }, docxModule] = await Promise.all([
+        import('jszip'),
+        format === 'docx' ? import('docx') : Promise.resolve(null),
+      ]);
+      const pdfModule = format === 'pdf' ? await import('jspdf') : null;
       const zip = new JSZip();
 
       for (const doc of selectedDocs) {
@@ -30,6 +32,8 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
         if (format === 'txt') {
           zip.file(`${title.replace(/[^a-z0-9]/gi, '_')}.txt`, content);
         } else if (format === 'docx') {
+          if (!docxModule) throw new Error('DOCX export library failed to load');
+          const { Document, Packer, Paragraph, TextRun } = docxModule;
           const docxDoc = new Document({
             sections: [{
               children: content.split('\n').map(line =>
@@ -40,6 +44,8 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
           const blob = await Packer.toBlob(docxDoc);
           zip.file(`${title.replace(/[^a-z0-9]/gi, '_')}.docx`, blob);
         } else if (format === 'pdf') {
+          if (!pdfModule) throw new Error('PDF export library failed to load');
+          const { jsPDF } = pdfModule;
           const pdf = new jsPDF();
           const lines = pdf.splitTextToSize(content, 180);
           pdf.text(lines, 15, 15);

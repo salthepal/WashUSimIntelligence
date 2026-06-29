@@ -2,8 +2,11 @@
  * DOCX generation utilities
  * Converts Markdown-formatted text to properly structured Word documents
  */
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } from 'docx';
 import { getAdminAuthHeaders } from '../api';
+
+type DocxModule = typeof import('docx');
+type ParagraphInstance = InstanceType<DocxModule['Paragraph']>;
+type TextRunInstance = InstanceType<DocxModule['TextRun']>;
 
 export interface DocxGenerationOptions {
   filename?: string;
@@ -22,8 +25,8 @@ export interface DocxGenerationOptions {
 /**
  * Parses inline Markdown formatting (**bold**, *italic*) and returns TextRun array
  */
-function parseInlineFormatting(text: string): TextRun[] {
-  const textRuns: TextRun[] = [];
+function parseInlineFormatting(docx: DocxModule, text: string): TextRunInstance[] {
+  const textRuns: TextRunInstance[] = [];
   
   // Split by both bold and italic markers
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/);
@@ -33,25 +36,25 @@ function parseInlineFormatting(text: string): TextRun[] {
     
     // Bold text (**text**)
     if (part.startsWith('**') && part.endsWith('**')) {
-      textRuns.push(new TextRun({ 
+      textRuns.push(new docx.TextRun({
         text: part.slice(2, -2), 
         bold: true 
       }));
     }
     // Italic text (*text*) but not bold
     else if (part.startsWith('*') && part.endsWith('*') && !part.startsWith('**')) {
-      textRuns.push(new TextRun({ 
+      textRuns.push(new docx.TextRun({
         text: part.slice(1, -1), 
         italics: true 
       }));
     }
     // Regular text
     else {
-      textRuns.push(new TextRun(part));
+      textRuns.push(new docx.TextRun(part));
     }
   });
 
-  return textRuns.length > 0 ? textRuns : [new TextRun(text)];
+  return textRuns.length > 0 ? textRuns : [new docx.TextRun(text)];
 }
 
 async function blobToImage(blob: Blob): Promise<HTMLImageElement> {
@@ -154,9 +157,9 @@ async function createPhotoCollage(urls: string[]): Promise<{ buffer: ArrayBuffer
 /**
  * Converts Markdown-formatted text to DOCX paragraphs
  */
-async function markdownToDocxParagraphs(markdown: string): Promise<Paragraph[]> {
+async function markdownToDocxParagraphs(docx: DocxModule, markdown: string): Promise<ParagraphInstance[]> {
   const lines = markdown.split('\n');
-  const children: Paragraph[] = [];
+  const children: ParagraphInstance[] = [];
   let currentFindingLevel = 0;
   const imgRegex = /^!\[.*?\]\((.*?)\)$/;
 
@@ -195,48 +198,48 @@ async function markdownToDocxParagraphs(markdown: string): Promise<Paragraph[]> 
       const trimmedLine = seg.line;
 
       if (!trimmedLine) {
-        children.push(new Paragraph({ text: '' }));
+        children.push(new docx.Paragraph({ text: '' }));
         currentFindingLevel = 0;
         continue;
       }
 
       if (trimmedLine.startsWith('# ') && !trimmedLine.startsWith('##')) {
-        children.push(new Paragraph({
+        children.push(new docx.Paragraph({
           text: trimmedLine.substring(2).trim(),
-          heading: HeadingLevel.HEADING_1,
+          heading: docx.HeadingLevel.HEADING_1,
           spacing: { before: 240, after: 120 },
         }));
         currentFindingLevel = 0;
       } else if (trimmedLine.startsWith('## ') && !trimmedLine.startsWith('###')) {
-        children.push(new Paragraph({
+        children.push(new docx.Paragraph({
           text: trimmedLine.substring(3).trim(),
-          heading: HeadingLevel.HEADING_2,
+          heading: docx.HeadingLevel.HEADING_2,
           spacing: { before: 240, after: 120 },
         }));
         currentFindingLevel = 0;
       } else if (trimmedLine.startsWith('### ')) {
-        children.push(new Paragraph({
+        children.push(new docx.Paragraph({
           text: trimmedLine.substring(4).trim(),
-          heading: HeadingLevel.HEADING_3,
+          heading: docx.HeadingLevel.HEADING_3,
           spacing: { before: 240, after: 120 },
         }));
         currentFindingLevel = 1;
       } else if (trimmedLine.match(/^[-•*]\s+/)) {
-        children.push(new Paragraph({
-          children: parseInlineFormatting(trimmedLine.replace(/^[-•*]\s+/, '')),
+        children.push(new docx.Paragraph({
+          children: parseInlineFormatting(docx, trimmedLine.replace(/^[-•*]\s+/, '')),
           bullet: { level: 0 },
           spacing: { after: 80 },
         }));
       } else if (trimmedLine.match(/^\d+[\.)]\s+/)) {
-        children.push(new Paragraph({
-          children: parseInlineFormatting(trimmedLine.replace(/^\d+[\.)]\s+/, '')),
+        children.push(new docx.Paragraph({
+          children: parseInlineFormatting(docx, trimmedLine.replace(/^\d+[\.)]\s+/, '')),
           numbering: { reference: 'default-numbering', level: 0 },
           spacing: { after: 80 },
         }));
       } else {
-        const textRuns = parseInlineFormatting(trimmedLine);
+        const textRuns = parseInlineFormatting(docx, trimmedLine);
         const indentLevel = currentFindingLevel > 0 ? 720 : 0;
-        children.push(new Paragraph({
+        children.push(new docx.Paragraph({
           children: textRuns,
           spacing: { after: 120 },
           indent: indentLevel > 0 ? { left: indentLevel } : undefined,
@@ -245,9 +248,9 @@ async function markdownToDocxParagraphs(markdown: string): Promise<Paragraph[]> 
     } else {
       const collage = await createPhotoCollage(seg.urls);
       if (collage) {
-        children.push(new Paragraph({
+        children.push(new docx.Paragraph({
           children: [
-            new ImageRun({
+            new docx.ImageRun({
               data: collage.buffer,
               type: collage.type,
               transformation: { width: collage.width, height: collage.height },
@@ -256,7 +259,7 @@ async function markdownToDocxParagraphs(markdown: string): Promise<Paragraph[]> 
           spacing: { before: 120, after: 160 },
         }));
       } else {
-        children.push(new Paragraph({ children: [new TextRun({ text: '[Images unavailable]', italics: true })] }));
+        children.push(new docx.Paragraph({ children: [new docx.TextRun({ text: '[Images unavailable]', italics: true })] }));
       }
     }
   }
@@ -271,9 +274,10 @@ export async function generateDocxFromMarkdown(
   markdown: string, 
   options: DocxGenerationOptions = {}
 ): Promise<Blob> {
-  const paragraphs = await markdownToDocxParagraphs(markdown);
+  const docx = await import('docx');
+  const paragraphs = await markdownToDocxParagraphs(docx, markdown);
   
-  const doc = new Document({
+  const doc = new docx.Document({
     numbering: {
       config: [
         {
@@ -310,7 +314,7 @@ export async function generateDocxFromMarkdown(
     ],
   });
 
-  return await Packer.toBlob(doc);
+  return await docx.Packer.toBlob(doc);
 }
 
 /**

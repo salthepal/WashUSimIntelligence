@@ -26,7 +26,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor-heavy': ['mammoth', 'jspdf', 'docx', 'html-to-image'],
           'vendor-charts': ['recharts'],
           'vendor-ui': ['react-joyride'],
         },

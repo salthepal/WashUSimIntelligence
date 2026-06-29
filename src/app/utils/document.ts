@@ -1,7 +1,6 @@
 /**
  * Document processing utilities
  */
-import mammoth from 'mammoth';
 import { sanitizeText, sanitizeHTML } from './sanitize';
 
 export interface ProcessedDocument {
@@ -14,6 +13,7 @@ export interface ProcessedDocument {
  * Processes a DOCX file and extracts content
  */
 export async function processDocxFile(file: File): Promise<ProcessedDocument> {
+  const mammoth = (await import('mammoth')).default;
   const arrayBuffer = await file.arrayBuffer();
   
   // Extract plain text directly (faster and more reliable)

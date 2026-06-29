@@ -7,7 +7,6 @@ import { downloadDocxFromMarkdown } from '../utils/docx';
 import { useSelection } from '../hooks/useSelection';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useDebounce } from 'use-debounce';
-import jsPDF from 'jspdf';
 import { useQueryClient } from '@tanstack/react-query';
 import { useReports, useNotes, useCaseFiles } from '../hooks/useQueries';
 import { Turnstile } from './ui/turnstile';
@@ -264,6 +263,7 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
     if (!generatedReport) return;
 
     try {
+      const { jsPDF } = await import('jspdf');
       const doc = new jsPDF();
 
       const pageWidth = doc.internal.pageSize.getWidth();

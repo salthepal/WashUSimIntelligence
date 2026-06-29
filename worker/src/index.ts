@@ -14,6 +14,7 @@ import { DEFAULT_MODEL, LIGHTWEIGHT_TASK_MODEL } from './utils/models';
 import { buildReportMarkdownDocument, chooseCanonicalReportTitle, ensureReportContentTitle, getReportR2Key } from './utils/report-identity';
 import { hydrateVectorMatches } from './utils/retrieval';
 import { indexDocumentVector, logError, logAudit, verifyTurnstile, verifyAdmin, rateLimit, noStore } from './lib/helpers';
+import { parseJsonField } from './utils/json';
 
 const APP_VERSION = '3.8.1';
 
@@ -107,25 +108,40 @@ app.get('/hydrate', verifyAdmin, async (c) => {
       reports: reports.results.map((r: any) => ({
         ...r,
         createdAt: r.created_at,
-        metadata: r.metadata ? JSON.parse(r.metadata) : {}
+        date: r.created_at,
+        metadata: parseJsonField(r.metadata, {})
       })),
       lsts: lsts.results.map((l: any) => ({
         ...l,
         identifiedDate: l.identified_date,
         lastSeenDate: l.last_seen_date,
         resolvedDate: l.resolved_date,
-        locationStatuses: l.location_statuses ? JSON.parse(l.location_statuses) : {}
+        createdAt: l.created_at,
+        relatedReportId: l.related_report_id,
+        resolutionNote: l.resolution_note,
+        recurrenceCount: l.recurrence_count || 1,
+        parentIssueId: l.parent_issue_id,
+        locationStatuses: parseJsonField(l.location_statuses, {})
       })),
       notes: notes.results.map((n: any) => ({
-        ...n,
+        id: n.id,
+        sessionName: n.session_name,
+        notes: n.notes,
+        type: 'session_notes',
         createdAt: n.created_at,
-        participants: n.participants ? JSON.parse(n.participants) : [],
-        tags: n.tags ? JSON.parse(n.tags) : [],
-        metadata: n.metadata ? JSON.parse(n.metadata) : {}
+        participants: parseJsonField(n.participants, []),
+        tags: parseJsonField(n.tags, []),
+        metadata: parseJsonField(n.metadata, {})
       })),
       cases: cases.results.map((cf: any) => ({
         ...cf,
-        createdAt: cf.created_at || cf.date
+        type: 'case_file',
+        createdAt: cf.created_at || cf.date,
+        htmlContent: cf.html_content || '',
+        metadata: {
+          uploaderName: cf.uploader_name || '',
+          caseType: cf.case_type || ''
+        }
       }))
     });
   } catch (error: any) {
@@ -459,7 +475,7 @@ app.get('/search', verifyAdmin, rateLimit, async (c) => {
           .all();
         return results.map((res: any) => ({
           ...res,
-          metadata: res.metadata ? JSON.parse(res.metadata) : {},
+          metadata: parseJsonField(res.metadata, {}),
           matchType: 'keyword' as const,
           score: 1.0 // Exact matches get the highest score
         }));
@@ -880,7 +896,7 @@ app.get('/reports', verifyAdmin, async (c) => {
         ...r,
         createdAt: r.created_at,
         date: r.created_at, // Use created_at as the primary date for the library
-        metadata: r.metadata ? JSON.parse(r.metadata) : {}
+        metadata: parseJsonField(r.metadata, {})
       }))
     });
   } catch (error: any) {
@@ -902,7 +918,7 @@ app.get('/reports/generated', verifyAdmin, async (c) => {
         ...r,
         createdAt: r.created_at,
         date: r.created_at, // Use created_at as the primary date for the library
-        metadata: r.metadata ? JSON.parse(r.metadata) : {}
+        metadata: parseJsonField(r.metadata, {})
       }))
     });
   } catch (error: any) {
@@ -1100,7 +1116,7 @@ app.post('/model-preference', verifyAdmin, async (c) => {
 app.get('/templates', verifyAdmin, async (c) => {
   try {
     const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
-    return c.json(results[0] ? JSON.parse(results[0].value as string) : []);
+    return c.json(results[0] ? parseJsonField(results[0].value, []) : []);
   } catch (error: any) {
     console.error('Template fetch failure:', error);
     return c.json({ error: 'Internal server error' }, 500);
@@ -1123,7 +1139,7 @@ app.post('/templates', verifyAdmin, async (c) => {
     };
 
     const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
-    const templates = results[0] ? JSON.parse(results[0].value as string) : [];
+    const templates = results[0] ? parseJsonField<any[]>(results[0].value, []) : [];
     const nextTemplates = [
       ...templates.filter((item: any) => item.id !== savedTemplate.id),
       savedTemplate,
@@ -1148,7 +1164,7 @@ app.delete('/templates/:id', verifyAdmin, async (c) => {
   try {
     const id = c.req.param('id');
     const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
-    const templates = results[0] ? JSON.parse(results[0].value as string) : [];
+    const templates = results[0] ? parseJsonField<any[]>(results[0].value, []) : [];
     const nextTemplates = templates.filter((item: any) => item.id !== id);
 
     await c.env.DB.prepare(`
@@ -1195,7 +1211,7 @@ app.get('/case-files', verifyAdmin, async (c) => {
 
     // Fallback to settings blob for legacy data
     const { results: fallback } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('case_files').all();
-    return c.json(fallback[0] ? JSON.parse(fallback[0].value as string) : []);
+    return c.json(fallback[0] ? parseJsonField(fallback[0].value, []) : []);
   } catch (error: any) {
     return c.json([]);
   }
@@ -1238,7 +1254,7 @@ app.delete('/case-files/:id', verifyAdmin, async (c) => {
     // Also try removing from legacy settings list (if present)
     const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('case_files').all();
     if (results[0]) {
-      const allCases = JSON.parse(results[0].value as string);
+      const allCases = parseJsonField<any[]>(results[0].value, []);
       const filtered = allCases.filter((cf: any) => cf.id !== id);
       await c.env.DB.prepare('UPDATE settings SET value = ? WHERE key = ?').bind(JSON.stringify(filtered), 'case_files').run();
     }
@@ -1281,7 +1297,7 @@ app.get('/error-log', verifyAdmin, async (c) => {
     const { results } = await c.env.DB.prepare('SELECT * FROM error_logs ORDER BY timestamp DESC LIMIT 100').all();
     return c.json(results.map((r: any) => ({
       ...r,
-      context: r.context ? JSON.parse(r.context) : null
+      context: parseJsonField(r.context, null)
     })));
   } catch (error: any) {
     console.error(error);

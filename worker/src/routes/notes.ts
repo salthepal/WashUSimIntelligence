@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Bindings } from '../types';
 import { verifyAdmin, verifyTurnstile, logAudit, logError } from '../lib/helpers';
+import { parseJsonField } from '../utils/json';
 
 const noteSchema = z.object({
   id: z.string().optional(),
@@ -27,10 +28,11 @@ notesRouter.get('/', verifyAdmin, async (c) => {
         id: n.id,
         sessionName: n.session_name,
         notes: n.notes,
+        type: 'session_notes',
         createdAt: n.created_at || new Date().toISOString(),
-        participants: n.participants ? JSON.parse(n.participants) : [],
-        tags: n.tags ? JSON.parse(n.tags) : [],
-        metadata: n.metadata ? JSON.parse(n.metadata) : {}
+        participants: parseJsonField(n.participants, []),
+        tags: parseJsonField(n.tags, []),
+        metadata: parseJsonField(n.metadata, {})
       }))
     });
   } catch (error: any) {

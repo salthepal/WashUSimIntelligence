@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Bindings } from '../types';
 import { verifyAdmin, logAudit, indexDocumentVector } from '../lib/helpers';
+import { parseJsonField } from '../utils/json';
 
 const lstSchema = z.object({
   id: z.string().optional(),
@@ -43,7 +44,7 @@ lstsRouter.get('/', verifyAdmin, async (c) => {
         resolutionNote: l.resolution_note,
         recurrenceCount: l.recurrence_count || 1,
         parentIssueId: l.parent_issue_id,
-        locationStatuses: l.location_statuses ? JSON.parse(l.location_statuses) : {}
+        locationStatuses: parseJsonField(l.location_statuses, {})
       }))
     });
   } catch (error: any) {
