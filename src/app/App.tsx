@@ -16,7 +16,7 @@ const ErrorLog = lazy(() => import('./components/error-log').then(m => ({ defaul
 import { ViewAIPrompt } from './components/view-ai-prompt';
 import { ErrorBoundary } from './components/error-boundary';
 import { Toaster } from './components/ui/sonner';
-import { FileText, Moon, Sun, HelpCircle, Menu, MapPin, X, Home } from 'lucide-react';
+import { AlertTriangle, Database, FileText, HelpCircle, Home, Loader2, MapPin, Menu, Moon, RefreshCw, Sun, X } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Skeleton } from './components/ui/skeleton';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -46,11 +46,90 @@ export type { Report, SessionNote, LST } from './types';
 import { API_BASE, getApiHeaders } from './api';
 export { API_BASE, getApiHeaders };
 
+function DataLoadingPanel() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center px-3">
+      <div className="w-full max-w-2xl rounded-lg border border-slate-200 dark:border-slate-700 bg-white/85 dark:bg-slate-900/85 shadow-sm p-5 md:p-7">
+        <div className="flex items-start gap-4">
+          <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#17413f] text-white">
+            <Database className="h-6 w-6" />
+            <Loader2 className="absolute -right-1 -top-1 h-4 w-4 animate-spin text-[#A51417]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100">
+              Loading WashU Sim Intelligence
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Connecting to the database and loading reports, session notes, case files, and LSTs.
+            </p>
+            <div className="mt-5 space-y-3" aria-hidden="true">
+              <Skeleton className="h-3 w-full rounded-full" />
+              <Skeleton className="h-3 w-5/6 rounded-full" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <Skeleton className="h-20 rounded-lg" />
+                <Skeleton className="h-20 rounded-lg" />
+                <Skeleton className="h-20 rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataLoadErrorPanel({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center px-3">
+      <div className="w-full max-w-2xl rounded-lg border border-red-200 dark:border-red-900/60 bg-white dark:bg-slate-900 shadow-sm p-5 md:p-7">
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100">
+              Database load failed
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              The app could not load the current intelligence database. Try again, or check the admin token if this keeps happening.
+            </p>
+            <p className="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-800 dark:text-red-200">
+              {message}
+            </p>
+            <Button onClick={onRetry} className="mt-5">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry Loading Data
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RouteLoadingPanel({ height = 'h-96' }: { height?: string }) {
+  return (
+    <div className="p-3 md:p-6">
+      <div className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading view...
+      </div>
+      <Skeleton className={`${height} rounded-lg`} />
+    </div>
+  );
+}
+
 export default function App() {
   const queryClient = useQueryClient();
   
   // --- HYDRATION (Optimization #5) ---
-  const { data: hydration, isLoading: loadingHydration } = useHydration();
+  const {
+    data: hydration,
+    isLoading: loadingHydration,
+    isError: hydrationFailed,
+    error: hydrationError,
+    refetch: retryHydration,
+  } = useHydration();
 
   // Populate individual caches from hydration result
   useEffect(() => {
@@ -73,6 +152,9 @@ export default function App() {
   const { data: lsts = [] } = useLSTs();
   
   const loading = loadingHydration;
+  const loadedRecordCount = reports.length + sessionNotes.length + caseFiles.length + generatedReports.length + lsts.length;
+  const showInitialLoading = loadingHydration && !hydration && loadedRecordCount === 0;
+  const showHydrationError = hydrationFailed && !hydration && loadedRecordCount === 0;
   
   const [tourRunning, setTourRunning] = useState(false);
   const [darkMode, setDarkMode] = useDarkMode();
@@ -227,9 +309,17 @@ export default function App() {
                 </div>
               )}
 
-              <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                
+              {showInitialLoading ? (
+                <DataLoadingPanel />
+              ) : showHydrationError ? (
+                <DataLoadErrorPanel
+                  message={hydrationError instanceof Error ? hydrationError.message : 'Hydration request failed'}
+                  onRetry={() => { void retryHydration(); }}
+                />
+              ) : (
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
                 <Route path="/dashboard" element={
                   <Suspense fallback={
                     <div className="space-y-6">
@@ -258,7 +348,7 @@ export default function App() {
                 } />
 
                 <Route path="/upload" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-64" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel height="h-64" />}>
                     <div className="p-2 md:p-6">
                       <UploadReports reports={reports} onRefresh={fetchData} />
                     </div>
@@ -266,7 +356,7 @@ export default function App() {
                 } />
 
                 <Route path="/cases" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-64" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel height="h-64" />}>
                     <div className="p-2 md:p-6">
                       <CaseFiles caseFiles={caseFiles} onRefresh={fetchData} />
                     </div>
@@ -274,7 +364,7 @@ export default function App() {
                 } />
 
                 <Route path="/notes" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-64" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel height="h-64" />}>
                     <div className="p-2 md:p-6">
                       <SessionNotes sessionNotes={sessionNotes} onRefresh={fetchData} />
                     </div>
@@ -282,7 +372,7 @@ export default function App() {
                 } />
 
                 <Route path="/generate" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-96" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel />}>
                     <div className="p-2 md:p-6">
                       <GenerateReport
                         selectedSite={selectedSite}
@@ -293,7 +383,7 @@ export default function App() {
                 } />
 
                 <Route path="/lst-tracker" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-96" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel />}>
                     <div className="p-2 md:p-6">
                       <LSTTracker selectedSite={selectedSite} />
                     </div>
@@ -301,7 +391,7 @@ export default function App() {
                 } />
 
                 <Route path="/repository" element={
-                  <Suspense fallback={<div className="p-6"><Skeleton className="h-96" /></div>}>
+                  <Suspense fallback={<RouteLoadingPanel />}>
                     <div className="p-2 md:p-6">
                       <ViewRepository
                         reports={reports}
@@ -352,7 +442,8 @@ export default function App() {
                     </div>
                   </div>
                 } />
-              </Routes>
+                </Routes>
+              )}
             </main>
           </div>
         </div>
