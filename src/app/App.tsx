@@ -109,7 +109,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className={`min-h-screen ${darkMode ? 'dark' : ''}`}>
-        <div className="min-h-screen bg-gradient-to-br from-[#f8f5ef] to-[#f0ebe2] dark:from-slate-900 dark:to-slate-800 transition-colors">
+        <div className="min-h-screen bg-gradient-to-br from-[#f8f5ef] to-[#f0ebe2] dark:from-[#101312] dark:to-[#181c1a] transition-colors">
           <Toaster />
           <Joyride
             steps={tourSteps}
@@ -126,7 +126,7 @@ export default function App() {
           />
 
           {/* Header */}
-          <header className="bg-gradient-to-r from-[#17413f] to-[#245855] text-white shadow-lg">
+          <header className="bg-gradient-to-r from-[#17413f] to-[#245855] dark:from-[#101312] dark:to-[#181c1a] text-white shadow-lg dark:border-b dark:border-[#303834]">
             <div className="px-3 md:px-6 py-2.5 md:py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
@@ -164,6 +164,8 @@ export default function App() {
                     size="icon"
                     onClick={() => setDarkMode(!darkMode)}
                     className="text-white hover:bg-white/20 w-8 h-8"
+                    aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                    aria-pressed={darkMode}
                   >
                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                   </Button>

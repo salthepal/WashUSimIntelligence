@@ -70,7 +70,7 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-md w-full border border-transparent dark:border-slate-700">
         {/* Header */}
         <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between rounded-t-xl">
           <div className="flex items-center gap-3">
@@ -88,15 +88,15 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
         {/* Content */}
         <div className="p-6 space-y-4">
           <div>
-            <p className="text-slate-600 mb-4">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
               Export {selectedDocs.length} selected documents as a ZIP archive
             </p>
 
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Export Format
             </label>
             <div className="space-y-2">
-              <label className="flex items-center gap-3 p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+              <label className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                 <input
                   type="radio"
                   value="docx"
@@ -105,11 +105,11 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
                   className="w-4 h-4 text-blue-600"
                 />
                 <div>
-                  <div className="font-medium text-slate-900">Microsoft Word (.docx)</div>
-                  <div className="text-sm text-slate-500">Formatted documents</div>
+                  <div className="font-medium text-slate-900 dark:text-slate-100">Microsoft Word (.docx)</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">Formatted documents</div>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+              <label className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                 <input
                   type="radio"
                   value="pdf"
@@ -118,11 +118,11 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
                   className="w-4 h-4 text-blue-600"
                 />
                 <div>
-                  <div className="font-medium text-slate-900">PDF (.pdf)</div>
-                  <div className="text-sm text-slate-500">Portable documents</div>
+                  <div className="font-medium text-slate-900 dark:text-slate-100">PDF (.pdf)</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">Portable documents</div>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-3 border border-slate-300 rounded-lg cursor-pointer hover:bg-slate-50">
+              <label className="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
                 <input
                   type="radio"
                   value="txt"
@@ -131,19 +131,19 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
                   className="w-4 h-4 text-blue-600"
                 />
                 <div>
-                  <div className="font-medium text-slate-900">Plain Text (.txt)</div>
-                  <div className="text-sm text-slate-500">Simple text files</div>
+                  <div className="font-medium text-slate-900 dark:text-slate-100">Plain Text (.txt)</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">Simple text files</div>
                 </div>
               </label>
             </div>
           </div>
 
-          <div className="bg-slate-50 rounded-lg p-4">
-            <h4 className="font-medium text-slate-900 mb-2">Selected Documents:</h4>
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
+            <h4 className="font-medium text-slate-900 dark:text-slate-100 mb-2">Selected Documents:</h4>
             <div className="space-y-1 max-h-40 overflow-y-auto">
               {selectedDocs.map(doc => (
-                <div key={doc.id} className="flex items-center gap-2 text-sm text-slate-700">
-                  <FileText className="w-4 h-4 text-slate-400" />
+                <div key={doc.id} className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                   {'title' in doc ? doc.title : doc.sessionName}
                 </div>
               ))}
@@ -161,7 +161,7 @@ export function BulkExportModal({ selectedIds, allDocuments, onClose }: BulkExpo
             </button>
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg transition-colors"
+              className="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-lg transition-colors"
             >
               Cancel
             </button>

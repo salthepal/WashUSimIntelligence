@@ -103,10 +103,10 @@ export function ViewAIPrompt() {
       </div>
 
       {/* Stats Card */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+      <div className="bg-gradient-to-r from-[#f0ebe2] to-[#fffdf8] dark:from-[#181c1a] dark:to-[#202622] border border-[#ddd5c8] dark:border-[#303834] rounded-lg p-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-2xl md:text-3xl font-bold text-[#17413f] dark:text-[#6db3ad]">
               {wordCount.toLocaleString()}
             </div>
             <div className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -114,7 +114,7 @@ export function ViewAIPrompt() {
             </div>
           </div>
           <div>
-            <div className="text-2xl md:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+            <div className="text-2xl md:text-3xl font-bold text-[#245855] dark:text-[#8bc8c2]">
               {charCount.toLocaleString()}
             </div>
             <div className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -122,7 +122,7 @@ export function ViewAIPrompt() {
             </div>
           </div>
           <div>
-            <div className="text-2xl md:text-3xl font-bold text-purple-600 dark:text-purple-400">
+            <div className="text-2xl md:text-3xl font-bold text-[#b94f33] dark:text-[#f08a6c]">
               ~{estimatedTokens.toLocaleString()}
             </div>
             <div className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -133,22 +133,22 @@ export function ViewAIPrompt() {
       </div>
 
       {/* Model Selector Card */}
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-lg p-5">
+      <div className="bg-gradient-to-br from-[#f0ebe2] to-[#fffdf8] dark:from-[#181c1a] dark:to-[#202622] border-2 border-[#ddd5c8] dark:border-[#303834] rounded-lg p-5">
         <div className="flex items-start gap-3">
-          <Code className="w-6 h-6 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5" />
+          <Code className="w-6 h-6 text-[#17413f] dark:text-[#6db3ad] flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h3 className="font-semibold text-purple-900 dark:text-purple-100 text-base md:text-lg mb-2">
+            <h3 className="font-semibold text-[#1f2523] dark:text-[#f3f1eb] text-base md:text-lg mb-2">
               Gemini AI Model Selection
             </h3>
-            <p className="text-xs md:text-sm text-purple-700 dark:text-purple-300 mb-4">
+            <p className="text-xs md:text-sm text-[#59615e] dark:text-[#b8c0bc] mb-4">
               Choose the primary Gemini model for professional report synthesis. Pro models offer maximum nuance, while Flash models are prioritized for speed. 
-              <span className="block mt-1 font-semibold text-purple-900 dark:text-purple-100 italic">
+              <span className="block mt-1 font-semibold text-[#1f2523] dark:text-[#f3f1eb] italic">
                 Note: LST Extraction consistently uses Flash Lite for sub-second background auditing.
               </span>
             </p>
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-3">
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-slate-800 border-2 rounded-lg cursor-pointer transition-all hover:border-purple-400 dark:hover:border-purple-600 has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50 dark:has-[:checked]:bg-purple-900/30">
+                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
                   <input
                     type="radio"
                     name="model"
@@ -156,11 +156,11 @@ export function ViewAIPrompt() {
                     checked={selectedModel === GEMINI_FLASH}
                     onChange={(e) => handleModelChange(e.target.value)}
                     disabled={savingModel}
-                    className="w-4 h-4 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
                   />
                   <div className="flex-1">
                     <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
-                      Gemini Flash <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full ml-1">Default</span>
+                      Gemini Flash <span className="text-xs bg-[#17413f]/10 dark:bg-[#6db3ad]/15 text-[#17413f] dark:text-[#6db3ad] px-2 py-0.5 rounded-full ml-1">Default</span>
                     </div>
                     <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       Balanced speed and quality
@@ -168,7 +168,7 @@ export function ViewAIPrompt() {
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-slate-800 border-2 rounded-lg cursor-pointer transition-all hover:border-purple-400 dark:hover:border-purple-600 has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50 dark:has-[:checked]:bg-purple-900/30">
+                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
                   <input
                     type="radio"
                     name="model"
@@ -176,7 +176,7 @@ export function ViewAIPrompt() {
                     checked={selectedModel === GEMINI_FLASH_LITE}
                     onChange={(e) => handleModelChange(e.target.value)}
                     disabled={savingModel}
-                    className="w-4 h-4 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
                   />
                   <div className="flex-1">
                     <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
@@ -188,7 +188,7 @@ export function ViewAIPrompt() {
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-slate-800 border-2 rounded-lg cursor-pointer transition-all hover:border-purple-400 dark:hover:border-purple-600 has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50 dark:has-[:checked]:bg-purple-900/30">
+                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
                   <input
                     type="radio"
                     name="model"
@@ -196,7 +196,7 @@ export function ViewAIPrompt() {
                     checked={selectedModel === GEMINI_PRO}
                     onChange={(e) => handleModelChange(e.target.value)}
                     disabled={savingModel}
-                    className="w-4 h-4 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
                   />
                   <div className="flex-1">
                     <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
@@ -209,8 +209,8 @@ export function ViewAIPrompt() {
                 </label>
               </div>
               {savingModel && (
-                <div className="flex items-center gap-2 text-sm text-purple-700 dark:text-purple-300">
-                  <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center gap-2 text-sm text-[#17413f] dark:text-[#6db3ad]">
+                  <div className="w-4 h-4 border-2 border-[#17413f] dark:border-[#6db3ad] border-t-transparent rounded-full animate-spin" />
                   Saving preference...
                 </div>
               )}
@@ -235,15 +235,15 @@ export function ViewAIPrompt() {
           </div>
         </div>
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div className="bg-[#f0ebe2] dark:bg-[#181c1a] border border-[#ddd5c8] dark:border-[#303834] rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <Code className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+            <Code className="w-5 h-5 text-[#17413f] dark:text-[#6db3ad] flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-sm md:text-base mb-1">
+              <h3 className="font-semibold text-[#1f2523] dark:text-[#f3f1eb] text-sm md:text-base mb-1">
                 Output Format: Markdown
               </h3>
-              <p className="text-xs md:text-sm text-blue-700 dark:text-blue-300">
-                All reports use strict Markdown formatting: <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded"># H1</code>, <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">## H2</code>, <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">### H3</code>, <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">**bold**</code>, <code className="bg-blue-200 dark:bg-blue-800 px-1 rounded">*italic*</code>. Temperature: 0.7 • Max Output: 8,192 tokens.
+              <p className="text-xs md:text-sm text-[#59615e] dark:text-[#b8c0bc]">
+                All reports use strict Markdown formatting: <code className="bg-[#ddd5c8] dark:bg-[#303834] px-1 rounded"># H1</code>, <code className="bg-[#ddd5c8] dark:bg-[#303834] px-1 rounded">## H2</code>, <code className="bg-[#ddd5c8] dark:bg-[#303834] px-1 rounded">### H3</code>, <code className="bg-[#ddd5c8] dark:bg-[#303834] px-1 rounded">**bold**</code>, <code className="bg-[#ddd5c8] dark:bg-[#303834] px-1 rounded">*italic*</code>. Temperature: 0.7 • Max Output: 8,192 tokens.
               </p>
             </div>
           </div>
@@ -251,9 +251,9 @@ export function ViewAIPrompt() {
       </div>
 
       {/* Prompt Display */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-[#181c1a] border border-slate-200 dark:border-[#303834] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-50 dark:bg-slate-900 px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="bg-slate-50 dark:bg-[#101312] px-4 py-3 border-b border-slate-200 dark:border-[#303834] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 md:w-5 md:h-5 text-slate-600 dark:text-slate-400" />
             <span className="font-semibold text-sm md:text-base text-slate-900 dark:text-slate-100">
@@ -263,13 +263,13 @@ export function ViewAIPrompt() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowFormatted(!showFormatted)}
-              className="px-3 py-1.5 text-xs md:text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              className="px-3 py-1.5 text-xs md:text-sm font-medium text-slate-700 dark:text-[#b8c0bc] bg-white dark:bg-[#181c1a] border border-slate-300 dark:border-[#303834] rounded-lg hover:bg-slate-50 dark:hover:bg-[#202622] transition-colors"
             >
               {showFormatted ? 'Show Raw' : 'Show Formatted'}
             </button>
             <button
               onClick={handleCopy}
-              className="px-3 py-1.5 text-xs md:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs md:text-sm font-medium text-white dark:text-[#101312] bg-[#17413f] hover:bg-[#245855] dark:bg-[#6db3ad] dark:hover:bg-[#8bc8c2] rounded-lg transition-colors flex items-center gap-1.5"
             >
               {copied ? (
                 <>
@@ -310,7 +310,7 @@ export function ViewAIPrompt() {
                       // Detect numbered lists
                       if (paragraph.match(/^\d+\./m)) {
                         return (
-                          <div key={idx} className="pl-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20 py-2 px-3 rounded">
+                          <div key={idx} className="pl-4 border-l-4 border-[#17413f] dark:border-[#6db3ad] bg-[#f0ebe2] dark:bg-[#181c1a] py-2 px-3 rounded">
                             {paragraph.split('\n').map((line, lineIdx) => (
                               <div key={lineIdx} className="mb-1">{line}</div>
                             ))}
@@ -337,7 +337,7 @@ export function ViewAIPrompt() {
                   </div>
                 </div>
               ) : (
-                <pre className="text-xs md:text-sm font-mono text-slate-800 dark:text-slate-200 whitespace-pre-wrap break-words overflow-x-auto bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                <pre className="text-xs md:text-sm font-mono text-slate-800 dark:text-[#f3f1eb] whitespace-pre-wrap break-words overflow-x-auto bg-slate-50 dark:bg-[#101312] p-4 rounded-lg border border-slate-200 dark:border-[#303834]">
 {promptTemplate}
                 </pre>
               )}
@@ -352,13 +352,13 @@ export function ViewAIPrompt() {
       </div>
 
       {/* Additional Info */}
-      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+      <div className="bg-slate-50 dark:bg-[#181c1a] rounded-lg p-4 border border-slate-200 dark:border-[#303834]">
         <h3 className="font-semibold text-sm md:text-base text-slate-900 dark:text-slate-100 mb-3">
           How the Prompt Works
         </h3>
-        <div className="space-y-3 text-xs md:text-sm text-slate-600 dark:text-slate-400">
+        <div className="space-y-3 text-xs md:text-sm text-slate-600 dark:text-[#b8c0bc]">
           <div className="flex items-start gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-[#17413f]/10 dark:bg-[#6db3ad]/15 text-[#17413f] dark:text-[#6db3ad] flex items-center justify-center font-bold text-xs flex-shrink-0">
               1
             </div>
             <p>
@@ -366,7 +366,7 @@ export function ViewAIPrompt() {
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <div className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-[#245855]/10 dark:bg-[#8bc8c2]/15 text-[#245855] dark:text-[#8bc8c2] flex items-center justify-center font-bold text-xs flex-shrink-0">
               2
             </div>
             <p>
@@ -374,7 +374,7 @@ export function ViewAIPrompt() {
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-[#b94f33]/10 dark:bg-[#f08a6c]/15 text-[#b94f33] dark:text-[#f08a6c] flex items-center justify-center font-bold text-xs flex-shrink-0">
               3
             </div>
             <p>
@@ -382,7 +382,7 @@ export function ViewAIPrompt() {
             </p>
           </div>
           <div className="flex items-start gap-2">
-            <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
+            <div className="w-6 h-6 rounded-full bg-[#b94f33]/10 dark:bg-[#f08a6c]/15 text-[#b94f33] dark:text-[#f08a6c] flex items-center justify-center font-bold text-xs flex-shrink-0">
               4
             </div>
             <p>

@@ -58,7 +58,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
             'w-full flex items-center justify-center p-2 rounded-lg transition-colors',
             selectedSite !== 'All Sites'
               ? 'bg-[#007A33]/10 text-[#007A33] dark:bg-[#007A33]/20 dark:text-emerald-400'
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+              : 'text-slate-500 dark:text-[#b8c0bc] hover:bg-slate-200 dark:hover:bg-[#202622]'
           )}
           title={`Site: ${selectedSite}`}
           aria-label="Select hospital site"
@@ -66,7 +66,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
           <Hospital className="w-5 h-5" />
         </button>
         {dropdownOpen && (
-          <div className="absolute left-14 top-auto z-50 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 mt-1">
+          <div className="absolute left-14 top-auto z-50 w-48 bg-white dark:bg-[#181c1a] border border-slate-200 dark:border-[#303834] rounded-lg shadow-lg py-1 mt-1">
             {availableSites.map(site => (
               <button
                 key={site}
@@ -75,7 +75,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
                   'w-full text-left px-3 py-2 text-sm transition-colors',
                   selectedSite === site
                     ? 'bg-[#007A33]/10 text-[#007A33] dark:bg-[#007A33]/20 dark:text-emerald-400 font-medium'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    : 'text-slate-700 dark:text-[#b8c0bc] hover:bg-slate-100 dark:hover:bg-[#202622]'
                 )}
               >
                 {site}
@@ -89,7 +89,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
 
   return (
     <div className="px-3 mb-2" ref={ref}>
-      <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 px-1">
+      <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-[#b8c0bc] mb-1.5 px-1">
         <Hospital className="w-3.5 h-3.5" />
         Hospital Site
       </label>
@@ -99,7 +99,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
           'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm border transition-colors',
           selectedSite !== 'All Sites'
             ? 'border-[#007A33]/30 bg-[#007A33]/5 text-[#007A33] dark:border-[#007A33]/40 dark:bg-[#007A33]/10 dark:text-emerald-400'
-            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+            : 'border-slate-200 dark:border-[#303834] bg-white dark:bg-[#151917] text-slate-700 dark:text-[#f3f1eb]'
         )}
         aria-label="Select hospital site"
       >
@@ -108,7 +108,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
       </button>
       {dropdownOpen && (
         <div className="relative z-50">
-          <div className="absolute top-1 left-0 right-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
+          <div className="absolute top-1 left-0 right-0 bg-white dark:bg-[#181c1a] border border-slate-200 dark:border-[#303834] rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
             {availableSites.map(site => (
               <button
                 key={site}
@@ -117,7 +117,7 @@ function SiteSelector({ selectedSite, onSiteChange, availableSites, collapsed }:
                   'w-full text-left px-3 py-2 text-sm transition-colors',
                   selectedSite === site
                     ? 'bg-[#007A33]/10 text-[#007A33] dark:bg-[#007A33]/20 dark:text-emerald-400 font-medium'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    : 'text-slate-700 dark:text-[#b8c0bc] hover:bg-slate-100 dark:hover:bg-[#202622]'
                 )}
               >
                 {site}
@@ -138,17 +138,17 @@ function SidebarWordmark({ collapsed }: { collapsed: boolean }) {
         role="img"
         aria-label="WashU Sim Intelligence"
       >
-        <span className="text-white text-xs font-black tracking-tight" aria-hidden="true">W</span>
+        <span className="text-primary-foreground text-xs font-black tracking-tight" aria-hidden="true">W</span>
       </div>
     );
   }
   return (
     <div className="flex items-center gap-2.5">
       <div className="w-9 h-9 rounded-md flex items-center justify-center bg-primary flex-shrink-0" aria-hidden="true">
-        <span className="text-white text-sm font-black tracking-tight">W</span>
+        <span className="text-primary-foreground text-sm font-black tracking-tight">W</span>
       </div>
       <div className="leading-tight font-mono min-w-0">
-        <div className="text-[9px] font-normal text-slate-400 dark:text-slate-500 uppercase tracking-widest">WashU EM</div>
+        <div className="text-[9px] font-normal text-slate-400 dark:text-[#b8c0bc] uppercase tracking-widest">WashU EM</div>
         <div className="text-[13px] font-semibold text-primary tracking-wide">SIM INTEL</div>
       </div>
     </div>
@@ -171,7 +171,7 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
       {/* Logo / Wordmark header — desktop only; mobile shows it in the drawer header */}
       {!mobile && (
         <div className={cn(
-          "flex items-center mb-3 pb-3 border-b border-slate-200 dark:border-slate-700",
+          "flex items-center mb-3 pb-3 border-b border-slate-200 dark:border-[#303834]",
           collapsed ? "justify-center" : "px-1"
         )}>
           <SidebarWordmark collapsed={collapsed} />
@@ -179,11 +179,11 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
       )}
 
       <div className={cn("flex items-center mb-2", collapsed ? "justify-center" : "justify-between px-2")}>
-        {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Navigation</span>}
+        {!collapsed && <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-[#b8c0bc]">Navigation</span>}
         {!mobile && (
           <button
             onClick={() => onCollapsedChange(!collapsed)}
-            className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-[#202622] text-slate-500 dark:text-[#b8c0bc] transition-colors"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
@@ -212,8 +212,8 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
               item.className,
               collapsed && !mobile && 'justify-center px-2',
               isActive
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-slate-700 dark:text-[#b8c0bc] hover:bg-slate-200 dark:hover:bg-[#202622]'
             )}
             title={collapsed ? item.label : undefined}
           >
@@ -223,13 +223,13 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
         );
       })}
 
-      <div className="mt-auto px-3 py-4 border-t border-slate-200 dark:border-slate-800">
+      <div className="mt-auto px-3 py-4 border-t border-slate-200 dark:border-[#303834]">
         <a
           href="https://github.com/salthepal/WashUSimIntelligence"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "flex items-center gap-3 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors",
+            "flex items-center gap-3 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-[#b8c0bc] dark:hover:text-[#f3f1eb] transition-colors",
             collapsed && !mobile && "justify-center"
           )}
         >
@@ -261,13 +261,13 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
         )}
         <aside
           className={cn(
-            'fixed top-0 left-0 z-50 h-full w-64 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transform transition-transform duration-200 ease-in-out',
+            'fixed top-0 left-0 z-50 h-full w-64 bg-slate-50 dark:bg-[#181c1a] border-r border-slate-200 dark:border-[#303834] transform transition-transform duration-200 ease-in-out',
             open ? 'translate-x-0' : '-translate-x-full'
           )}
         >
-          <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+          <div className="p-3 border-b border-slate-200 dark:border-[#303834] flex items-center justify-between">
             <SidebarWordmark collapsed={false} />
-            <button onClick={onClose} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500">
+            <button onClick={onClose} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-[#202622] text-slate-500 dark:text-[#b8c0bc]">
               <PanelLeftClose className="w-4 h-4" />
             </button>
           </div>
@@ -281,7 +281,7 @@ export function AppSidebar({ collapsed, onCollapsedChange, mobile, open, onClose
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen flex-shrink-0 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-700 transition-all duration-200 overflow-y-auto',
+        'sticky top-0 h-screen flex-shrink-0 bg-slate-50 dark:bg-[#181c1a] border-r border-slate-200 dark:border-[#303834] transition-all duration-200 overflow-y-auto',
         collapsed ? 'w-16' : 'w-56'
       )}
     >

@@ -77,7 +77,7 @@ export function ReportViewer({ report, onClose, onUpdate }: ReportViewerProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-transparent dark:border-slate-700">
         {/* Header */}
         <div className="bg-slate-900 text-white px-6 py-4">
           <div className="flex items-center justify-between mb-3">
@@ -203,10 +203,10 @@ export function ReportViewer({ report, onClose, onUpdate }: ReportViewerProps) {
             <textarea
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
-              className="w-full h-full min-h-[500px] px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              className="w-full h-full min-h-[500px] px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100"
             />
           ) : (
-            <div className="prose max-w-none">
+            <div className="prose max-w-none text-slate-900 dark:text-slate-100">
               <pre className="whitespace-pre-wrap font-sans">
                 {editedContent || report.content}
               </pre>

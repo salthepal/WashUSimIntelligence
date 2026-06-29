@@ -6,6 +6,22 @@ import { HashRouter } from "react-router-dom";
 import App from "./app/App";
 import "./styles/index.css";
 
+const THEME_STORAGE_KEY = "washu-em-sim-theme";
+
+try {
+  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  const legacyDarkMode = window.localStorage.getItem("darkMode");
+
+  if (!savedTheme && legacyDarkMode === "true") {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
+  }
+} catch {
+  document.documentElement.classList.remove("dark");
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
