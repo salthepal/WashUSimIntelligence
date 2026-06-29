@@ -16,7 +16,7 @@ const ErrorLog = lazy(() => import('./components/error-log').then(m => ({ defaul
 import { ViewAIPrompt } from './components/view-ai-prompt';
 import { ErrorBoundary } from './components/error-boundary';
 import { Toaster } from './components/ui/sonner';
-import { FileText, Moon, Sun, HelpCircle, Menu, MapPin, X } from 'lucide-react';
+import { FileText, Moon, Sun, HelpCircle, Menu, MapPin, X, Home } from 'lucide-react';
 import { Button } from './components/ui/button';
 import { Skeleton } from './components/ui/skeleton';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -148,6 +148,17 @@ export default function App() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="text-white hover:bg-white/20 hover:text-white px-2 md:px-3"
+                  >
+                    <a href="https://washuemsim.org/" aria-label="Return to home">
+                      <Home className="w-4 h-4" />
+                      <span className="hidden sm:inline">Return to home</span>
+                    </a>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

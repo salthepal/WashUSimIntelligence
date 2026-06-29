@@ -34,16 +34,17 @@ The system is designed around the practical workflow of a simulation program:
 
 Built on a Cloudflare-native stack for reliability, fast access, and secure clinical education workflows:
 
-- **Frontend**: React (Vite + TypeScript + Tailwind) with a streamlined, tablet-optimized dashboard.
-- **Backend API**: Cloudflare Workers (Hono) running at the edge.
+- **Frontend**: React (Vite + TypeScript + Tailwind) deployed to Cloudflare Pages at `https://intel.washuemsim.org`.
+- **Backend API**: Cloudflare Workers (Hono) running at the edge. The public `workers.dev` route is disabled, and the Pages Function proxy calls the Worker through the `WASHU_SIM_INTEL_API` service binding.
 - **Decision Support**: 
-  - **Library Q&A**: **Cloudflare AI Search** (AutoRAG) for cited answers across simulation materials.
+  - **Library Q&A**: Retrieval-augmented answers over the local simulation knowledge base.
   - **Report Drafting**: Asynchronous streaming via **Google Gemini Flash**.
   - **Semantic Indexing**: **Cloudflare Vectorize** with **Workers AI** for retrieval across scenarios, reports, and LST records.
 - **Data Primitives**: 
-  - **Relational SQL**: Cloudflare D1
-  - **Object Storage**: Cloudflare R2 (Clinical docs & Markdown mirrors)
-  - **Metadata Cache**: Cloudflare KV (Rate limiting & Auth)
+  - **Relational SQL**: Cloudflare D1 (`washu_sim_db`)
+  - **Object Storage**: Cloudflare R2 (`washu-sim-intel-storage-2026`)
+  - **Metadata Cache**: Cloudflare KV (`RATELIMIT_V2`)
+  - **Vector Index**: Cloudflare Vectorize (`sim_search`)
 
 ---
 
@@ -52,7 +53,7 @@ Built on a Cloudflare-native stack for reliability, fast access, and secure clin
 ### Prerequisites
 
 - **Node.js**: v20 or higher.
-- **Cloudflare Account**: With access to D1, R2, Vectorize, and AI Search.
+- **Cloudflare Account**: With access to D1, R2, Vectorize, Workers AI, KV, Pages, and Workers.
 - **Secrets**: 
   - `GEMINI_API_KEY`: For report generation.
   - `TURNSTILE_SECRET_KEY`: For spam protection on generation endpoints.
@@ -85,17 +86,20 @@ Built on a Cloudflare-native stack for reliability, fast access, and secure clin
 
 The system uses GitHub Actions for continuous delivery:
 
-- **Frontend**: Automatically deployed via **Cloudflare Pages**.
-- **Backend**: Update resource IDs in `wrangler.toml` and run `npm run deploy` in the `worker/` directory.
+- **Frontend**: Automatically deployed via **Cloudflare Pages** and served at `https://intel.washuemsim.org`.
+- **Backend**: Update resource IDs in `worker/wrangler.toml` and run `npm run deploy` in the `worker/` directory.
+- **Proxying**: Production `/api/*` traffic flows through the Pages Function service binding `WASHU_SIM_INTEL_API`. Use an explicit `BACKEND_URL` only for local or break-glass testing.
+- **Access**: Cloudflare Access protects `intel.washuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview hostnames for `wustl.edu` users plus the configured admin email.
 
 ---
 
 ## 🔒 Security & Governance
 
 - **Just Culture**: Reports prioritize growth and systemic fixes over individual blame.
-- **Data Sovereignty**: Leverages regional storage primitives to maintain clinical data control.
-- **Administrative Access**: Clinical data reads and writes require an admin token.
+- **Data Residency**: Current production placement is Cloudflare D1 in `ENAM` and R2 in `WNAM`. Treat that as approved only for non-PHI simulation safety data; migrate to newly created jurisdiction-pinned resources before accepting stricter residency requirements.
+- **Administrative Access**: Clinical data reads and writes require `X-Admin-Token`.
 - **Spam Protection**: Upload and generation endpoints are protected by **Cloudflare Turnstile**.
+- **Security Headers**: Browser protections are served from `public/_headers`.
 - **Clinical Data Handling**: Avoid entering patient identifiers or protected health information unless your Cloudflare deployment has been approved for that use.
 
 ---

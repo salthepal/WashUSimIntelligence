@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Bindings } from '../types';
-import { verifyAdmin, verifyTurnstile, logAudit } from '../lib/helpers';
+import { verifyAdmin, logAudit, indexDocumentVector } from '../lib/helpers';
 
 const lstSchema = z.object({
   id: z.string().optional(),
@@ -79,6 +79,15 @@ lstsRouter.put('/:id', verifyAdmin, async (c) => {
       lst.parentIssueId || null, lst.locationStatuses ? JSON.stringify(lst.locationStatuses) : null,
       id
     ).run();
+
+    c.executionCtx.waitUntil(indexDocumentVector(
+      c.env,
+      id,
+      lst.title,
+      `${lst.description}\n\n${lst.recommendation}`,
+      'lst',
+      { category: lst.category, severity: lst.severity, status: lst.status }
+    ));
     
     return c.json({ success: true });
   } catch (error: any) {
@@ -102,6 +111,14 @@ lstsRouter.post('/add', verifyAdmin, async (c) => {
       .run();
       
     await logAudit(c.env.DB, 'create', 'lst', lst.title || 'Untitled LST', id);
+    c.executionCtx.waitUntil(indexDocumentVector(
+      c.env,
+      id,
+      lst.title || 'Untitled',
+      `${lst.description || ''}\n\n${lst.recommendation || ''}`,
+      'lst',
+      { category: lst.category || '', severity: lst.severity || 'Medium', status: lst.status || 'Identified' }
+    ));
     return c.json({ success: true, id });
   } catch (error: any) {
     console.error(error);
@@ -137,6 +154,14 @@ lstsRouter.post('/merge', verifyAdmin, async (c) => {
     await c.env.DB.prepare(`DELETE FROM lsts WHERE id IN (${placeholders})`).bind(...ids).run();
 
     await logAudit(c.env.DB, 'merge', 'lst', `Merged ${ids.length} LSTs into "${mergedLST.title}"`, id);
+    c.executionCtx.waitUntil(indexDocumentVector(
+      c.env,
+      id,
+      mergedLST.title || 'Merged LST',
+      `${mergedLST.description || ''}\n\n${mergedLST.recommendation || ''}`,
+      'lst',
+      { category: mergedLST.category || '', severity: mergedLST.severity || 'Medium', status: mergedLST.status || 'Identified' }
+    ));
     return c.json({ success: true, id });
   } catch (error: any) {
     console.error(error);

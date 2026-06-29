@@ -1,7 +1,7 @@
 name = "washu-sim-intel"
 main = "src/index.ts"
-compatibility_date = "2026-05-01"
-workers_dev = true
+compatibility_date = "2026-06-04"
+workers_dev = false
 
 [triggers]
 crons = ["0 0 * * *"]

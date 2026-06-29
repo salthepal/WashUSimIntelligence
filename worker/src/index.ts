@@ -1,6 +1,5 @@
 /**
- * WashU EM Sim Intelligence Worker - v3.8.0
- * Automatic deployment test triggered via GitHub Actions
+ * WashU EM Sim Intelligence Worker.
  */
 import { Hono } from 'hono';
 import { streamText } from 'hono/streaming';
@@ -15,6 +14,8 @@ import { DEFAULT_MODEL, LIGHTWEIGHT_TASK_MODEL } from './utils/models';
 import { buildReportMarkdownDocument, chooseCanonicalReportTitle, ensureReportContentTitle, getReportR2Key } from './utils/report-identity';
 import { hydrateVectorMatches } from './utils/retrieval';
 import { indexDocumentVector, logError, logAudit, verifyTurnstile, verifyAdmin, rateLimit, noStore } from './lib/helpers';
+
+const APP_VERSION = '3.8.1';
 
 const reportUploadSchema = z.object({
   id: z.string().optional(),
@@ -41,6 +42,14 @@ const askSchema = z.object({
   stream: z.boolean().optional().default(false)
 });
 
+const templateSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional().default(''),
+  structure: z.string().min(1, "Structure is required"),
+  createdAt: z.string().optional()
+});
+
 type Bindings = {
   DB: D1Database;
   BUCKET: R2Bucket;
@@ -48,7 +57,6 @@ type Bindings = {
   GEMINI_API_KEY: string;
   TURNSTILE_SECRET_KEY: string;
   ADMIN_TOKEN: string;
-  AI_SEARCH_TOKEN: string;
   AI: any;
   VECTORIZE: VectorizeIndex;
 };
@@ -56,7 +64,6 @@ type Bindings = {
 const ALLOWED_ORIGINS = [
   'https://intel.washuemsim.org',
   'https://washusimintelligence.pages.dev',
-  'https://washu-sim-intel.sphadnisuf.workers.dev',
   'http://localhost:5173',
   'http://localhost:8787',
 ];
@@ -81,7 +88,7 @@ app.use('*', noStore);
 app.get('/', (c) => {
   return c.json({
     message: 'WashU EM Sim Intelligence API is Running',
-    version: '3.1.2',
+    version: APP_VERSION,
     status: 'Operational'
   });
 });
@@ -284,8 +291,7 @@ app.get('/files/:path{.+}', verifyAdmin, async (c) => {
   return c.body(object.body, { headers });
 });
 
-// AI Search (RAG) — Powered by Cloudflare AI Search (AutoRAG)
-// Uses Workers AI binding to query the 'washu-sim-ssearch' instance
+// Library Q&A (RAG) backed by Vectorize, Workers AI embeddings, and Gemini.
 app.post('/ask', verifyAdmin, rateLimit, async (c) => {
   try {
     const rawData = await c.req.json();
@@ -484,26 +490,7 @@ app.get('/search', verifyAdmin, rateLimit, async (c) => {
 
         if (matches.matches.length === 0) return [];
 
-        // Hydrate from DB
-        const ids = matches.matches.map(m => m.id);
-        const placeholders = ids.map(() => '?').join(',');
-        const { results } = await c.env.DB.prepare(`
-          SELECT 
-            id, 
-            title, 
-            content as snippet,
-            'report' as type
-          FROM reports 
-          WHERE id IN (${placeholders})
-        `)
-          .bind(...ids)
-          .all();
-
-        return results.map((res: any) => ({
-          ...res,
-          matchType: 'semantic' as const,
-          score: matches.matches.find(m => m.id === res.id)?.score || 0.5
-        }));
+        return hydrateSearchMatches(c.env.DB, matches.matches as any[]);
       } catch (e) {
         console.error('Semantic Search Error:', e);
         return [];
@@ -532,6 +519,29 @@ app.get('/search', verifyAdmin, rateLimit, async (c) => {
 
   } catch (error: any) {
     console.error('Hybrid Search Failure:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+app.get('/search/semantic', verifyAdmin, rateLimit, async (c) => {
+  const query = c.req.query('q');
+  if (!query) return c.json([]);
+
+  try {
+    if (!c.env.AI || !c.env.VECTORIZE) return c.json([]);
+
+    const aiOutput = await c.env.AI.run('@cf/baai/bge-small-en-v1.5', { text: [query] });
+    const queryVector = Array.isArray(aiOutput) ? aiOutput[0] : aiOutput.data?.[0];
+    if (!queryVector) return c.json([]);
+
+    const matches = await c.env.VECTORIZE.query(queryVector, {
+      topK: 20,
+      returnMetadata: 'all'
+    });
+
+    return c.json(await hydrateSearchMatches(c.env.DB, matches.matches as any[]));
+  } catch (error: any) {
+    console.error('Semantic Search Failure:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
@@ -821,7 +831,7 @@ ${caseFilesContext}
              .bind(attemptId, reportTitle, normalizedReportContent, 'generated_report', JSON.stringify(generatedMetadata))
              .run();
 
-           // Write to R2 as markdown so Cloudflare AI Search can index it
+           // Keep a Markdown mirror in R2 for export and future reindexing.
            const r2Key = getReportR2Key(attemptId, 'generated_report');
            const markdownContent = buildReportMarkdownDocument(reportTitle, normalizedReportContent, 'generated_report', new Date().toISOString());
            await c.env.BUCKET.put(r2Key, markdownContent, {
@@ -918,7 +928,7 @@ app.post('/reports/upload', verifyAdmin, verifyTurnstile, async (c) => {
       .bind(id, title, content, reportData.type || 'prior_report', JSON.stringify(reportData.metadata || {}))
       .run();
 
-    // Write to R2 as markdown so Cloudflare AI Search can index it
+    // Keep a Markdown mirror in R2 for export and future reindexing.
     const r2Key = getReportR2Key(id, reportData.type || 'prior_report');
     const markdownContent = buildReportMarkdownDocument(title, content, reportData.type || 'prior_report', new Date().toISOString());
     c.executionCtx.waitUntil(
@@ -1087,6 +1097,75 @@ app.post('/model-preference', verifyAdmin, async (c) => {
   }
 });
 
+app.get('/templates', verifyAdmin, async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
+    return c.json(results[0] ? JSON.parse(results[0].value as string) : []);
+  } catch (error: any) {
+    console.error('Template fetch failure:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+app.post('/templates', verifyAdmin, async (c) => {
+  try {
+    const rawTemplate = await c.req.json();
+    const parseResult = templateSchema.safeParse(rawTemplate);
+    if (!parseResult.success) {
+      return c.json({ error: 'Validation failed', details: parseResult.error.issues }, 400);
+    }
+
+    const template = parseResult.data;
+    const savedTemplate = {
+      ...template,
+      id: template.id || `template-${crypto.randomUUID()}`,
+      createdAt: template.createdAt || new Date().toISOString(),
+    };
+
+    const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
+    const templates = results[0] ? JSON.parse(results[0].value as string) : [];
+    const nextTemplates = [
+      ...templates.filter((item: any) => item.id !== savedTemplate.id),
+      savedTemplate,
+    ];
+
+    await c.env.DB.prepare(`
+      INSERT INTO settings (key, value) VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `)
+      .bind('report_templates', JSON.stringify(nextTemplates))
+      .run();
+
+    await logAudit(c.env.DB, 'create', 'template', savedTemplate.name, savedTemplate.id);
+    return c.json({ success: true, template: savedTemplate });
+  } catch (error: any) {
+    await logError(c.env.DB, 'template_save', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+app.delete('/templates/:id', verifyAdmin, async (c) => {
+  try {
+    const id = c.req.param('id');
+    const { results } = await c.env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind('report_templates').all();
+    const templates = results[0] ? JSON.parse(results[0].value as string) : [];
+    const nextTemplates = templates.filter((item: any) => item.id !== id);
+
+    await c.env.DB.prepare(`
+      INSERT INTO settings (key, value) VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `)
+      .bind('report_templates', JSON.stringify(nextTemplates))
+      .run();
+
+    await logAudit(c.env.DB, 'delete', 'template', `Deleted template ${id}`, id);
+    return c.json({ success: true });
+  } catch (error: any) {
+    await logError(c.env.DB, 'template_delete', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 
 import { notesRouter } from './routes/notes';
 app.route('/notes', notesRouter);
@@ -1139,6 +1218,10 @@ app.post('/case-files/upload', verifyAdmin, verifyTurnstile, async (c) => {
       .run();
       
     await logAudit(c.env.DB, 'upload', 'case_file', data.title || 'Untitled Case', id);
+    c.executionCtx.waitUntil(indexDocumentVector(c.env, id, data.title || 'Untitled Case', data.content || '', 'case_file', {
+      caseType: data.metadata?.caseType || '',
+      uploaderName: data.metadata?.uploaderName || '',
+    }));
     return c.json({ success: true, id });
   } catch (error: any) {
     await logError(c.env.DB, 'case_file_upload', error);
@@ -1231,6 +1314,31 @@ app.get('/audit-log', verifyAdmin, async (c) => {
   }
 });
 
+app.get('/debug/all-keys', verifyAdmin, async (c) => {
+  try {
+    const [reports, notes, lsts, cases, settings] = await c.env.DB.batch([
+      c.env.DB.prepare('SELECT id, title, type, created_at FROM reports ORDER BY created_at DESC LIMIT 100'),
+      c.env.DB.prepare('SELECT id, session_name, created_at FROM session_notes ORDER BY created_at DESC LIMIT 100'),
+      c.env.DB.prepare('SELECT id, title, status, severity, last_seen_date FROM lsts ORDER BY last_seen_date DESC LIMIT 100'),
+      c.env.DB.prepare('SELECT id, title, date, case_type FROM case_files ORDER BY date DESC LIMIT 100'),
+      c.env.DB.prepare('SELECT key FROM settings ORDER BY key LIMIT 100')
+    ]);
+
+    const keys = [
+      ...(reports.results ?? []).map((row: any) => ({ table: 'reports', ...row })),
+      ...(notes.results ?? []).map((row: any) => ({ table: 'session_notes', ...row })),
+      ...(lsts.results ?? []).map((row: any) => ({ table: 'lsts', ...row })),
+      ...(cases.results ?? []).map((row: any) => ({ table: 'case_files', ...row })),
+      ...(settings.results ?? []).map((row: any) => ({ table: 'settings', ...row })),
+    ];
+
+    return c.json({ total: keys.length, keys });
+  } catch (error: any) {
+    await logError(c.env.DB, 'debug_all_keys', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 // Backup & Restore
 app.get('/backup', verifyAdmin, async (c) => {
   try {
@@ -1244,7 +1352,7 @@ app.get('/backup', verifyAdmin, async (c) => {
     
     const backup = {
       exportedAt: new Date().toISOString(),
-      version: '2.0-cloudflare',
+      version: APP_VERSION,
       reports: reports.results,
       lsts: lsts.results,
       sessionNotes: notes.results,
@@ -1430,7 +1538,7 @@ async function scheduledBackup(env: Bindings) {
 
     const backup = {
       exportedAt: new Date().toISOString(),
-      version: '3.1.2-auto',
+      version: `${APP_VERSION}-auto`,
       reports: reports.results,
       lsts: lsts.results,
       sessionNotes: notes.results,
@@ -1455,21 +1563,60 @@ app.post('/admin/reindex', verifyAdmin, async (c) => {
       return c.json({ error: 'AI and Vectorize bindings are not configured on this worker environment. Check wrangler.toml and deploy again.' }, 503);
     }
 
-    // 1. Fetch all reports
-    const { results: reports } = await c.env.DB.prepare('SELECT id, title, content FROM reports').all();
+    const [
+      { results: reports },
+      { results: cases },
+      { results: lsts },
+    ] = await c.env.DB.batch([
+      c.env.DB.prepare('SELECT id, title, content FROM reports'),
+      c.env.DB.prepare('SELECT id, title, content, case_type, uploader_name FROM case_files'),
+      c.env.DB.prepare('SELECT id, title, description, recommendation, category, severity, status FROM lsts'),
+    ]);
     
-    // 2. Chunks of 5 for re-indexing (balance speed and AI rate limits)
     let count = 0;
     const chunkSize = 5;
-    for (let i = 0; i < reports.length; i += chunkSize) {
-      const chunk = reports.slice(i, i + chunkSize);
+
+    const documents = [
+      ...reports.map((report: any) => ({
+        id: report.id as string,
+        title: chooseCanonicalReportTitle(report),
+        content: ensureReportContentTitle(chooseCanonicalReportTitle(report), report.content as string),
+        type: 'report',
+        metadata: {},
+      })),
+      ...cases.map((caseFile: any) => ({
+        id: caseFile.id as string,
+        title: (caseFile.title as string) || 'Untitled Case',
+        content: (caseFile.content as string) || '',
+        type: 'case_file',
+        metadata: {
+          caseType: (caseFile.case_type as string) || '',
+          uploaderName: (caseFile.uploader_name as string) || '',
+        },
+      })),
+      ...lsts.map((lst: any) => ({
+        id: lst.id as string,
+        title: (lst.title as string) || 'Untitled LST',
+        content: `${lst.description || ''}\n\n${lst.recommendation || ''}`,
+        type: 'lst',
+        metadata: {
+          category: (lst.category as string) || '',
+          severity: (lst.severity as string) || '',
+          status: (lst.status as string) || '',
+        },
+      })),
+    ];
+
+    for (let i = 0; i < documents.length; i += chunkSize) {
+      const chunk = documents.slice(i, i + chunkSize);
       await Promise.all(chunk.map(report => 
          indexDocumentVector(
            c.env,
-           report.id as string,
-           chooseCanonicalReportTitle(report as any),
-           ensureReportContentTitle(chooseCanonicalReportTitle(report as any), report.content as string),
-           'report'
+           report.id,
+           report.title,
+           report.content,
+           report.type,
+           report.metadata
          )
       ));
       count += chunk.length;
@@ -1524,7 +1671,43 @@ app.post('/admin/repair-report-identities', verifyAdmin, async (c) => {
 });
 
 // Final check: Version identifier for deployment confirmation
-app.get('/health', (c) => c.json({ status: 'ok', version: '3.5.0' }));
+app.get('/health', (c) => c.json({ status: 'ok', version: APP_VERSION }));
+
+async function hydrateSearchMatches(db: D1Database, matches: any[]) {
+  if (matches.length === 0) return [];
+
+  const results = await Promise.all(matches.map(async (match: any) => {
+    const metadata = match.metadata ?? {};
+    const type = metadata.type || metadata.documentType || 'report';
+
+    if (type === 'case_file') {
+      const { results } = await db.prepare(`
+        SELECT id, title, content as snippet, 'case_file' as type
+        FROM case_files
+        WHERE id = ?
+      `).bind(match.id).all();
+      return results[0] ? { ...results[0], matchType: 'semantic' as const, score: match.score || 0.5 } : null;
+    }
+
+    if (type === 'lst') {
+      const { results } = await db.prepare(`
+        SELECT id, title, description as snippet, 'lst' as type
+        FROM lsts
+        WHERE id = ?
+      `).bind(match.id).all();
+      return results[0] ? { ...results[0], matchType: 'semantic' as const, score: match.score || 0.5 } : null;
+    }
+
+    const { results } = await db.prepare(`
+      SELECT id, title, content as snippet, type
+      FROM reports
+      WHERE id = ?
+    `).bind(match.id).all();
+    return results[0] ? { ...results[0], matchType: 'semantic' as const, score: match.score || 0.5 } : null;
+  }));
+
+  return results.filter(Boolean);
+}
 
 export default {
   fetch: (request: Request, env: Bindings, ctx: ExecutionContext) => {

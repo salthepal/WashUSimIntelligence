@@ -295,7 +295,7 @@ export async function reindexAll() {
 }
 
 /**
- * Ask a natural language question against the clinical library using Cloudflare AI Search (RAG).
+ * Ask a natural language question against the clinical library using the Vectorize RAG index.
  * Returns a full AI-generated answer with cited source documents.
  */
 export async function askAI(query: string): Promise<{

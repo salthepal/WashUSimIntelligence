@@ -24,13 +24,11 @@ The frontend is built using Vite and deployed directly to the Cloudflare network
 ### Automated Deployment
 Connecting the GitHub repository to Cloudflare Pages handles all production builds and edge deployments automatically on push.
 
-### Pages Environment Variables
-Configure the Pages Function proxy with the production Worker URL:
-```bash
-BACKEND_URL=https://washu-sim-intel.sphadnisuf.workers.dev
-```
-
-If `BACKEND_URL` is not set, the checked-in Pages Function falls back to the current production workers.dev endpoint.
+### Pages Function API Binding
+The Pages Function proxy should call the backend through a Cloudflare service
+binding named `WASHU_SIM_INTEL_API` that points to the `washu-sim-intel`
+Worker. The proxy fails closed with `503` if neither the service binding nor an
+explicit `BACKEND_URL` override is configured.
 
 ---
 
@@ -93,7 +91,7 @@ npx wrangler secret put GEMINI_API_KEY
 # Cloudflare Turnstile Secret Key for spam protection
 npx wrangler secret put TURNSTILE_SECRET_KEY
 
-# Optional: Admin token for protected administrative routes
+# Admin token for protected administrative routes
 npx wrangler secret put ADMIN_TOKEN
 ```
 
@@ -107,7 +105,7 @@ The frontend uses `/api` in production so requests pass through the Cloudflare P
 - **Audit Logging**: All administrative actions are recorded in the central D1 `audit_logs` table.
 - **Administrative Access**: Clinical data endpoints require `X-Admin-Token`; upload and generation writes also require `X-Turnstile-Token`.
 - **Clinical Data Handling**: Do not enter patient identifiers or protected health information unless the deployment has been reviewed under the institution's privacy, retention, and access-control requirements.
-- **Zero Trust**: For enterprise environments, we recommend deploying **Cloudflare Access** in front of the application dashboard.
+- **Zero Trust**: Cloudflare Access should protect `intel.washuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview deployment URLs.
 
 ---
 

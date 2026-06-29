@@ -5,7 +5,6 @@ export type Bindings = {
   GEMINI_API_KEY: string;
   TURNSTILE_SECRET_KEY: string;
   ADMIN_TOKEN: string;
-  AI_SEARCH_TOKEN: string;
   AI: any;
   VECTORIZE: VectorizeIndex;
 };

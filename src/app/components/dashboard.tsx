@@ -297,7 +297,7 @@ export function Dashboard({ reports, sessionNotes, generatedReports, lsts, isLoa
         <div className="flex items-center gap-2 px-5 py-4 border-b border-purple-100 dark:border-purple-800/50">
           <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Ask AI</h3>
-          <span className="ml-auto text-xs text-purple-500 font-medium">Powered by Cloudflare AI Search</span>
+          <span className="ml-auto text-xs text-purple-500 font-medium">Powered by Vectorize RAG</span>
         </div>
         <div className="p-5 space-y-4">
           <div className="flex gap-2">

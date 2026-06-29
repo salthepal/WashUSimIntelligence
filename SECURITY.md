@@ -37,6 +37,7 @@ WashU Sim Intelligence leverages several Cloudflare security primitives:
 - **CSRF/Abuse Protection**: Sensitive write endpoints require custom headers and upload/generation routes require **Cloudflare Turnstile**.
 - **D1/R2 Isolation**: Minimal database permissions and authenticated access for assets.
 - **Clinical Data Handling**: Do not enter patient identifiers or protected health information unless your deployment has completed institutional privacy and access-control review.
+- **Data Residency**: The current production D1 database runs in Cloudflare `ENAM`, and the R2 bucket is located in `WNAM`. Treat this placement as the approved operating region for non-PHI simulation safety data; migrate to newly created jurisdiction-pinned resources before accepting data with stricter residency requirements.
 
 ---
 
