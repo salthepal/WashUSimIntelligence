@@ -27,7 +27,7 @@ import { TOUR_STEPS, KEYBOARD_SHORTCUTS } from './constants/tour';
 import { toast } from 'sonner';
 import { AppSidebar } from './components/app-sidebar';
 import { AdminSettings } from './components/admin-settings';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { LST, Report, SessionNote } from './types';
 
 // Suppress React DevTools warning (harmless warning from browser extensions)
@@ -78,7 +78,15 @@ function DataLoadingPanel() {
   );
 }
 
-function DataLoadErrorPanel({ message, onRetry }: { message: string; onRetry: () => void }) {
+function DataLoadErrorPanel({
+  message,
+  onConfigureToken,
+  onRetry,
+}: {
+  message: string;
+  onConfigureToken: () => void;
+  onRetry: () => void;
+}) {
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-3">
       <div className="w-full max-w-2xl rounded-lg border border-red-200 dark:border-red-900/60 bg-white dark:bg-slate-900 shadow-sm p-5 md:p-7">
@@ -96,10 +104,15 @@ function DataLoadErrorPanel({ message, onRetry }: { message: string; onRetry: ()
             <p className="mt-3 rounded-md bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-800 dark:text-red-200">
               {message}
             </p>
-            <Button onClick={onRetry} className="mt-5">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry Loading Data
-            </Button>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button onClick={onRetry}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry Loading Data
+              </Button>
+              <Button variant="outline" onClick={onConfigureToken}>
+                Configure Admin Token
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -121,6 +134,8 @@ function RouteLoadingPanel({ height = 'h-96' }: { height?: string }) {
 
 export default function App() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // --- HYDRATION (Optimization #5) ---
   const {
@@ -154,12 +169,12 @@ export default function App() {
   const loading = loadingHydration;
   const loadedRecordCount = reports.length + sessionNotes.length + caseFiles.length + generatedReports.length + lsts.length;
   const showInitialLoading = loadingHydration && !hydration && loadedRecordCount === 0;
-  const showHydrationError = hydrationFailed && !hydration && loadedRecordCount === 0;
+  const isSettingsRoute = location.pathname === '/settings';
+  const showHydrationError = hydrationFailed && !hydration && loadedRecordCount === 0 && !isSettingsRoute;
   
   const [tourRunning, setTourRunning] = useState(false);
   const [darkMode, setDarkMode] = useDarkMode();
   const [tourSteps, setTourSteps] = useLocalStorage<Step[]>('tourSteps', TOUR_STEPS);
-  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage('sidebarCollapsed', false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -314,6 +329,7 @@ export default function App() {
               ) : showHydrationError ? (
                 <DataLoadErrorPanel
                   message={hydrationError instanceof Error ? hydrationError.message : 'Hydration request failed'}
+                  onConfigureToken={() => navigate('/settings')}
                   onRetry={() => { void retryHydration(); }}
                 />
               ) : (

@@ -58,7 +58,7 @@ export function AdminSettings() {
         <div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Administrative Authorization</h3>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Enter your <b>ADMIN_TOKEN</b> to enable destructive actions (Delete, Clear Logs, Backup).
+            Enter your <b>ADMIN_TOKEN</b> to load protected data and enable administrative actions.
           </p>
         </div>
       </div>
@@ -138,6 +138,7 @@ export function AdminSettings() {
         <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
           <b>Note:</b> This token is stored locally in your browser and never reaches the server except in headers for authorized requests. 
           Destructive actions will return <code>401 Unauthorized</code> without this token.
+          Data reads will also fail until a valid token is saved.
         </p>
       </div>
     </div>

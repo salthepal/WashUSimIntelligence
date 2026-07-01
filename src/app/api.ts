@@ -1,10 +1,12 @@
 /// <reference types="vite/client" />
 import type { Report, SessionNote, CaseFile, LST } from './types';
 
+const LOCAL_DEV_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
 // Base URL for the backend API (defaults to /api proxy, can be overridden for local dev)
 export const API_BASE = import.meta.env.VITE_API_BASE || (
-  window.location.hostname === 'localhost' 
-    ? 'http://localhost:8787' 
+  LOCAL_DEV_HOSTS.has(window.location.hostname)
+    ? 'http://localhost:8787'
     : '/api'
 );
 
@@ -32,6 +34,21 @@ export const getAdminAuthHeaders = () => {
 
 // NOTE: Always use getApiHeaders() for fresh auth tokens — never cache headers at module scope.
 
+async function throwApiError(response: Response, fallbackMessage: string): Promise<never> {
+  const contentType = response.headers.get('content-type') || '';
+  let serverMessage = '';
+
+  if (contentType.includes('application/json')) {
+    const data: any = await response.json().catch(() => ({}));
+    serverMessage = data.error || data.message || '';
+  } else {
+    serverMessage = (await response.text().catch(() => '')).trim();
+  }
+
+  const detail = serverMessage ? `: ${serverMessage}` : '';
+  throw new Error(`${fallbackMessage} (${response.status} ${response.statusText})${detail}`);
+}
+
 export async function fetchHydration(): Promise<{
   reports: Report[],
   lsts: LST[],
@@ -39,7 +56,7 @@ export async function fetchHydration(): Promise<{
   cases: CaseFile[]
 }> {
   const res = await fetch(`${API_BASE}/hydrate`, { headers: getApiHeaders() });
-  if (!res.ok) throw new Error('Hydration failed');
+  if (!res.ok) await throwApiError(res, 'Hydration failed');
   return res.json();
 }
 
