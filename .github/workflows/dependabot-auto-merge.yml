@@ -1,0 +1,53 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Check auto-merge policy
+        id: policy
+        env:
+          DEPENDENCY_NAMES: "${{ steps.metadata.outputs.dependency-names }}"
+          DEPENDENCY_TYPE: "${{ steps.metadata.outputs.dependency-type }}"
+          UPDATE_TYPE: "${{ steps.metadata.outputs.update-type }}"
+        shell: bash
+        run: |
+          allowed=false
+          dependency_names="${DEPENDENCY_NAMES// /}"
+
+          if [[ "$UPDATE_TYPE" == "version-update:semver-patch" ]]; then
+            allowed=true
+          elif [[ "$UPDATE_TYPE" == "version-update:semver-minor" && "$DEPENDENCY_TYPE" == "direct:development" ]]; then
+            allowed=true
+          fi
+
+          if [[ ",$dependency_names," == *",wrangler,"* || ",$dependency_names," == *",@cloudflare/workers-types,"* ]]; then
+            allowed=false
+          fi
+
+          echo "allowed=$allowed" >> "$GITHUB_OUTPUT"
+
+      - name: Enable squash auto-merge
+        if: steps.policy.outputs.allowed == 'true'
+        env:
+          GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          PR_URL: "${{ github.event.pull_request.html_url }}"
+        run: gh pr merge --auto --squash "$PR_URL"
