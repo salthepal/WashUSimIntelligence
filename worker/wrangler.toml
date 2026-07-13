@@ -22,7 +22,11 @@ persist = true
 head_sampling_rate = 1
 
 [vars]
-# Add any public environment variables here
+# Optional explicit provider configuration. When omitted, OPENAI_API_KEY takes
+# precedence and GEMINI_API_KEY is used as the fallback.
+# AI_PROVIDER = "openai"
+# AI_MODEL = "gpt-5.4-mini"
+# AI_LIGHTWEIGHT_MODEL = "gpt-5.4-mini"
 
 [[d1_databases]]
 binding = "DB"

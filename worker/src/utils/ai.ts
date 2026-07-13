@@ -1,4 +1,4 @@
-import { LIGHTWEIGHT_TASK_MODEL } from './models';
+import type { AIProviderClient } from './ai-provider';
 
 export interface LSTPayload {
   title: string;
@@ -18,7 +18,7 @@ async function logError(db: D1Database, action: string, error: any, context?: an
   } catch (e) { console.error('Double fault logging error:', e); }
 }
 
-export async function extractAndScoreLSTs(db: D1Database, reportContent: string, reportId: string, geminiKey: string) {
+export async function extractAndScoreLSTs(db: D1Database, reportContent: string, reportId: string, ai: AIProviderClient) {
   try {
     const prompt = `
 Role: You are a Medical Safety Audit AI for Washington University Emergency Medicine.
@@ -42,46 +42,27 @@ Return ONLY a valid JSON array of objects. No preamble.
 Format: [{"title": "...", "description": "...", "recommendation": "...", "severity": "...", "category": "..."}]
 `;
 
-    const lstCtrl = new AbortController();
-    const lstTimeout = setTimeout(() => lstCtrl.abort(), 30_000);
-    let data: any;
-    try {
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${LIGHTWEIGHT_TASK_MODEL}:generateContent?key=${geminiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1, responseMimeType: 'application/json' }
-          }),
-          signal: lstCtrl.signal,
-        }
-      );
-      if (!geminiRes.ok) {
-        const errText = await geminiRes.text();
-        await logError(db, 'AI_LST_FETCH', new Error(`Gemini API returned ${geminiRes.status}: ${errText}`), { reportId });
-        return;
-      }
-      data = await geminiRes.json() as any;
-    } finally {
-      clearTimeout(lstTimeout);
-    }
+    const result = await ai.generateText({
+      input: prompt,
+      model: ai.lightweightModel,
+      maxOutputTokens: 4096,
+      json: true,
+    });
 
     console.log(JSON.stringify({
-      event: 'gemini_call', endpoint: 'extractAndScoreLSTs',
-      finishReason: data?.candidates?.[0]?.finishReason,
-      promptTokens: data?.usageMetadata?.promptTokenCount,
-      completionTokens: data?.usageMetadata?.candidatesTokenCount,
+      event: 'ai_call', provider: ai.name, endpoint: 'extractAndScoreLSTs',
+      model: ai.lightweightModel,
+      finishReason: result.finishReason,
+      promptTokens: result.usage?.inputTokens,
+      completionTokens: result.usage?.outputTokens,
     }));
 
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      await logError(db, 'AI_LST_PARSE', new Error('Empty Gemini response'), { data, reportId });
+    if (!result.text) {
+      await logError(db, 'AI_LST_PARSE', new Error('Empty AI response'), { provider: ai.name, reportId });
       return;
     }
     
-    const rawText = data.candidates[0].content.parts[0].text;
-    const parsedLSTs: LSTPayload[] = JSON.parse(rawText);
+    const parsedLSTs: LSTPayload[] = JSON.parse(result.text);
 
     for (const lst of parsedLSTs) {
       const lstId = `lst_${crypto.randomUUID()}`;

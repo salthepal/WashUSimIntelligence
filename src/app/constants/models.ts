@@ -1,15 +1,15 @@
-/**
- * Centralized Gemini model identifiers (frontend mirror).
- *
- * Must stay in sync with `worker/src/utils/models.ts`.
- */
+export interface AIModelOption {
+  id: string;
+  label: string;
+  description: string;
+}
 
-export const GEMINI_FLASH = 'gemini-flash-latest';
-export const GEMINI_FLASH_LITE = 'gemini-flash-lite-latest';
-export const GEMINI_PRO = 'gemini-pro-latest';
+export interface AIModelConfiguration {
+  provider: 'openai' | 'gemini';
+  model: string;
+  models: AIModelOption[];
+  lightweightModel: string;
+}
 
-/** Default model when no user preference is loaded yet. */
-export const DEFAULT_MODEL = GEMINI_FLASH;
-
-export const SUPPORTED_MODELS = [GEMINI_FLASH, GEMINI_FLASH_LITE, GEMINI_PRO] as const;
-export type SupportedModel = typeof SUPPORTED_MODELS[number];
+/** Used only until the backend configuration loads. */
+export const DEFAULT_MODEL = 'gpt-5.4-mini';

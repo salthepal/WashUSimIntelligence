@@ -38,5 +38,5 @@ jobs:
           apiToken: "${{ secrets.CLOUDFLARE_API_TOKEN }}"
           accountId: "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}"
           workingDirectory: 'worker'
-          command: deploy --name washu-em-sim-intelligence
+          command: deploy --name washu-sim-intel
           # Optional: Metadata can be added to logging or external trackers

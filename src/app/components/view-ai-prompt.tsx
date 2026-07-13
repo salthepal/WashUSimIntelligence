@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, Copy, CheckCircle, AlertCircle, Eye, Code } from 'lucide-react';
 import { API_BASE, getApiHeaders } from '../api';
-import { GEMINI_FLASH, GEMINI_FLASH_LITE, GEMINI_PRO, DEFAULT_MODEL } from '../constants/models';
+import { DEFAULT_MODEL, type AIModelOption } from '../constants/models';
 import { toast } from 'sonner';
 
 export function ViewAIPrompt() {
@@ -10,6 +10,9 @@ export function ViewAIPrompt() {
   const [copied, setCopied] = useState(false);
   const [showFormatted, setShowFormatted] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL);
+  const [provider, setProvider] = useState('AI');
+  const [modelOptions, setModelOptions] = useState<AIModelOption[]>([]);
+  const [lightweightModel, setLightweightModel] = useState('');
   const [savingModel, setSavingModel] = useState(false);
 
   useEffect(() => {
@@ -51,6 +54,9 @@ export function ViewAIPrompt() {
       if (response.ok) {
         const data = await response.json();
         setSelectedModel(data.model);
+        setProvider(data.provider || 'AI');
+        setModelOptions(Array.isArray(data.models) ? data.models : []);
+        setLightweightModel(data.lightweightModel || '');
       }
     } catch (error) {
       console.error('Error fetching model preference:', error);
@@ -98,7 +104,7 @@ export function ViewAIPrompt() {
           AI Prompt Template
         </h2>
         <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">
-          View the exact prompt template sent to Gemini AI for report generation. This is the instruction set that guides the AI's output.
+          View the exact prompt template sent to the configured AI provider for report generation.
         </p>
       </div>
 
@@ -138,75 +144,35 @@ export function ViewAIPrompt() {
           <Code className="w-6 h-6 text-[#17413f] dark:text-[#6db3ad] flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold text-[#1f2523] dark:text-[#f3f1eb] text-base md:text-lg mb-2">
-              Gemini AI Model Selection
+              {provider === 'openai' ? 'OpenAI' : provider === 'gemini' ? 'Gemini' : provider} Model Selection
             </h3>
             <p className="text-xs md:text-sm text-[#59615e] dark:text-[#b8c0bc] mb-4">
-              Choose the primary Gemini model for professional report synthesis. Pro models offer maximum nuance, while Flash models are prioritized for speed. 
+              Choose the primary model for professional report synthesis. Available choices come from the backend's active provider configuration.
               <span className="block mt-1 font-semibold text-[#1f2523] dark:text-[#f3f1eb] italic">
-                Note: LST Extraction consistently uses Flash Lite for sub-second background auditing.
+                Note: LST extraction uses {lightweightModel || 'the provider lightweight model'} for background auditing.
               </span>
             </p>
             <div className="space-y-3">
               <div className="flex flex-col sm:flex-row gap-3">
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
-                  <input
-                    type="radio"
-                    name="model"
-                    value={GEMINI_FLASH}
-                    checked={selectedModel === GEMINI_FLASH}
-                    onChange={(e) => handleModelChange(e.target.value)}
-                    disabled={savingModel}
-                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
-                      Gemini Flash <span className="text-xs bg-[#17413f]/10 dark:bg-[#6db3ad]/15 text-[#17413f] dark:text-[#6db3ad] px-2 py-0.5 rounded-full ml-1">Default</span>
+                {modelOptions.map((model, index) => (
+                  <label key={model.id} className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
+                    <input
+                      type="radio"
+                      name="model"
+                      value={model.id}
+                      checked={selectedModel === model.id}
+                      onChange={(e) => handleModelChange(e.target.value)}
+                      disabled={savingModel}
+                      className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
+                        {model.label}{index === 0 && <span className="text-xs bg-[#17413f]/10 dark:bg-[#6db3ad]/15 text-[#17413f] dark:text-[#6db3ad] px-2 py-0.5 rounded-full ml-1">Default</span>}
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{model.description}</div>
                     </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                      Balanced speed and quality
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
-                  <input
-                    type="radio"
-                    name="model"
-                    value={GEMINI_FLASH_LITE}
-                    checked={selectedModel === GEMINI_FLASH_LITE}
-                    onChange={(e) => handleModelChange(e.target.value)}
-                    disabled={savingModel}
-                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
-                      Gemini Flash Lite
-                    </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                      Fastest, most efficient
-                    </div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 flex-1 p-3 bg-white dark:bg-[#151917] border-2 dark:border-[#303834] rounded-lg cursor-pointer transition-all hover:border-[#b94f33] dark:hover:border-[#f08a6c] has-[:checked]:border-[#17413f] dark:has-[:checked]:border-[#6db3ad] has-[:checked]:bg-[#17413f]/5 dark:has-[:checked]:bg-[#6db3ad]/10">
-                  <input
-                    type="radio"
-                    name="model"
-                    value={GEMINI_PRO}
-                    checked={selectedModel === GEMINI_PRO}
-                    onChange={(e) => handleModelChange(e.target.value)}
-                    disabled={savingModel}
-                    className="w-4 h-4 text-[#17413f] focus:ring-2 focus:ring-[#b94f33]"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">
-                      Gemini Pro
-                    </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                      Most capable, detailed output
-                    </div>
-                  </div>
-                </label>
+                  </label>
+                ))}
               </div>
               {savingModel && (
                 <div className="flex items-center gap-2 text-sm text-[#17413f] dark:text-[#6db3ad]">
