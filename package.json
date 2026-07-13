@@ -22,7 +22,7 @@
     "washU",
     "LST-tracking",
     "AI-report-generation",
-    "gemini-ai"
+    "ai-provider"
   ],
   "scripts": {
     "build": "vite build",

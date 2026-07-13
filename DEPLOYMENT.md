@@ -85,7 +85,10 @@ npm run deploy
 ### Required Backend Secrets (Workers)
 Configure the following secrets in your Cloudflare Worker:
 ```bash
-# Gemini API Key for report generation
+# Preferred: OpenAI Responses API for report generation, Q&A, and LST extraction
+npx wrangler secret put OPENAI_API_KEY
+
+# Optional fallback: keep Gemini available when OPENAI_API_KEY is absent
 npx wrangler secret put GEMINI_API_KEY
 
 # Cloudflare Turnstile Secret Key for spam protection
@@ -94,6 +97,8 @@ npx wrangler secret put TURNSTILE_SECRET_KEY
 # Admin token for protected administrative routes
 npx wrangler secret put ADMIN_TOKEN
 ```
+
+The Worker automatically selects OpenAI when `OPENAI_API_KEY` exists; otherwise it uses Gemini. To make the choice explicit, set `AI_PROVIDER` to `openai` or `gemini` in `[vars]` in `worker/wrangler.toml`. Optional `AI_MODEL` and `AI_LIGHTWEIGHT_MODEL` variables override the provider defaults.
 
 ### Frontend Configuration
 The frontend uses `/api` in production so requests pass through the Cloudflare Pages Function proxy. For local development, set `VITE_API_BASE` or run the Worker at `http://localhost:8787`.

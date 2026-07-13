@@ -12,7 +12,7 @@ import { useReports, useNotes, useCaseFiles } from '../hooks/useQueries';
 import { Turnstile } from './ui/turnstile';
 import { LayoutGrid, Cpu } from 'lucide-react';
 import { compressImage } from '../../utils/image';
-import { GEMINI_FLASH, GEMINI_FLASH_LITE, GEMINI_PRO, DEFAULT_MODEL } from '../constants/models';
+import { DEFAULT_MODEL, type AIModelOption } from '../constants/models';
 
 interface GenerateReportProps {
   selectedSite?: string;
@@ -37,7 +37,9 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileKey, setTurnstileKey] = useState(0);
   const [selectedModel, setSelectedModel] = useState<string>(DEFAULT_MODEL);
-  const [loadingModel, setLoadingModel] = useState(false);
+  const [provider, setProvider] = useState('AI');
+  const [modelOptions, setModelOptions] = useState<AIModelOption[]>([]);
+  const [lightweightModel, setLightweightModel] = useState('');
   
   // Media Attachments & Box Integration
   const [attachedImages, setAttachedImages] = useState<AttachedImage[]>([]);
@@ -119,6 +121,9 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
         if (response.ok) {
           const data = await response.json();
           setSelectedModel(data.model);
+          setProvider(data.provider || 'AI');
+          setModelOptions(Array.isArray(data.models) ? data.models : []);
+          setLightweightModel(data.lightweightModel || '');
         }
       } catch (e) {
         console.error('Error fetching model:', e);
@@ -150,7 +155,7 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
         body: JSON.stringify({ model: newModel }),
       });
       if (!response.ok) throw new Error();
-      toast.success(`Active logic model: ${newModel.replace('gemini-', '').replace('-latest', '').toUpperCase()}`);
+      toast.success(`Active logic model: ${newModel}`);
     } catch (e) {
       setSelectedModel(previousModel);
       toast.error('Failed to sync model selection');
@@ -880,7 +885,7 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
 
               {extractLST && (
                 <div className="mt-3 text-xs text-blue-800 dark:text-blue-300 bg-white/50 dark:bg-slate-950/50 p-2 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                  <strong>Intelligence Active:</strong> Gemini 3.1 Flash Lite will scan this report for clinical gaps, equipment failures, and process errors.
+                  <strong>Intelligence Active:</strong> {lightweightModel || provider} will scan this report for clinical gaps, equipment failures, and process errors.
                 </div>
               )}
             </div>
@@ -895,19 +900,16 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Active Engine</span>
                 </div>
                 <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                  {[
-                    { id: GEMINI_FLASH_LITE, label: 'Lite', color: 'bg-green-600 text-white border-green-600', hover: 'hover:bg-green-50 text-green-700' },
-                    { id: GEMINI_FLASH, label: 'Flash', color: 'bg-blue-600 text-white border-blue-600', hover: 'hover:bg-blue-50 text-blue-700' },
-                    { id: GEMINI_PRO, label: 'Pro', color: 'bg-indigo-600 text-white border-indigo-600', hover: 'hover:bg-indigo-50 text-indigo-700' },
-                  ].map((m) => (
+                  {modelOptions.map((m, index) => (
                     <button
                       key={m.id}
                       onClick={() => handleModelChange(m.id)}
                       className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
                         selectedModel === m.id
-                          ? `${m.color} shadow-lg shadow-current/20 scale-105`
+                          ? `${index === 0 ? 'bg-green-600' : index === 1 ? 'bg-blue-600' : 'bg-indigo-600'} text-white shadow-lg shadow-current/20 scale-105`
                           : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
                       }`}
+                      title={m.description}
                     >
                       {m.label}
                     </button>
@@ -924,7 +926,7 @@ export function GenerateReport({ selectedSite, onRefresh }: GenerateReportProps)
               className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-3 text-lg"
             >
               <Sparkles className="w-6 h-6" />
-              {generating ? 'Generating Report with Gemini AI...' : 'Generate Post-Session Report'}
+              {generating ? `Generating Report with ${provider}...` : 'Generate Post-Session Report'}
             </button>
           </div>
 

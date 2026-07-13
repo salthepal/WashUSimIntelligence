@@ -38,7 +38,7 @@ Built on a Cloudflare-native stack for reliability, fast access, and secure clin
 - **Backend API**: Cloudflare Workers (Hono) running at the edge. The public `workers.dev` route is disabled, and the Pages Function proxy calls the Worker through the `WASHU_SIM_INTEL_API` service binding.
 - **Decision Support**: 
   - **Library Q&A**: Retrieval-augmented answers over the local simulation knowledge base.
-  - **Report Drafting**: Asynchronous streaming via **Google Gemini Flash**.
+  - **Report Drafting**: Provider-agnostic asynchronous streaming via the **OpenAI Responses API** or **Google Gemini**.
   - **Semantic Indexing**: **Cloudflare Vectorize** with **Workers AI** for retrieval across scenarios, reports, and LST records.
 - **Data Primitives**: 
   - **Relational SQL**: Cloudflare D1 (`washu_sim_db`)
@@ -55,7 +55,8 @@ Built on a Cloudflare-native stack for reliability, fast access, and secure clin
 - **Node.js**: v20 or higher.
 - **Cloudflare Account**: With access to D1, R2, Vectorize, Workers AI, KV, Pages, and Workers.
 - **Secrets**: 
-  - `GEMINI_API_KEY`: For report generation.
+  - `OPENAI_API_KEY`: Preferred provider for report generation, library Q&A, and LST extraction.
+  - `GEMINI_API_KEY`: Optional fallback provider.
   - `TURNSTILE_SECRET_KEY`: For spam protection on generation endpoints.
   - `ADMIN_TOKEN`: For protected clinical data and administrative API access.
 

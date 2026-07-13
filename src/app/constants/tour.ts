@@ -23,7 +23,7 @@ export const TOUR_STEPS: Step[] = [
   },
   {
     target: '.generate-tab',
-    content: 'AI-powered report generation using Gemini 3.0 Flash Experimental. Select style guides, session notes, and case files to synthesize professional reports with LST identification and educational insights.',
+    content: 'AI-powered report generation using the configured provider. Select style guides, session notes, and case files to synthesize professional reports with LST identification and educational insights.',
     title: '✨ Generate Reports',
   },
   {
