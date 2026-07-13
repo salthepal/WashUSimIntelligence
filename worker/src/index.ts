@@ -381,6 +381,7 @@ ${query}
     }
   } catch (error: any) {
     console.error('[ASK] Search error:', error);
+    await logError(c.env.DB, 'ask_ai', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
