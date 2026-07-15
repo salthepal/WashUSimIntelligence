@@ -5,6 +5,30 @@ All notable changes to the WashU EM Sim Intelligence Platform will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.9.0] - 2026-07-14
+
+### 🧠 Flexible AI & Clinical Workspace Refresh
+A feature release that makes report generation provider-flexible, adds richer case context, modernizes the interface, and hardens the production delivery path.
+
+### ✨ Added
+- **Provider-Agnostic AI Backend**: Report generation and LST extraction can use OpenAI or Gemini through a shared provider layer, with clearer configuration and fallback behavior.
+- **Case Summaries in Report Drafting**: Selected case files now contribute concise summaries to report prompts, improving scenario-specific context while controlling prompt size.
+- **Shared Dark Mode**: Added a manually controlled theme that persists across the WashU EM Simulation suite.
+- **Loading and Recovery States**: Added a clear initial data-loading experience and improved recovery when an administrator token expires or becomes invalid.
+- **Automated Dependency Maintenance**: Added Dependabot configuration and guarded auto-merge automation for safe dependency updates.
+
+### 🛠️ Changed
+- **Clinical-Editorial Redesign**: Refreshed the dashboard, navigation, report workflows, notifications, and visual system to match the broader WashU EM Simulation suite.
+- **Cloudflare Architecture**: Routed production API traffic through the Pages Function service binding and tightened Worker deployment configuration.
+- **Data Loading and Exports**: Improved database hydration behavior and lazy-loaded large export libraries to reduce initial application work.
+- **Documentation and CI**: Expanded deployment, security, and architecture guidance and added continuous integration checks.
+
+### 🐛 Fixed
+- **Worker Deployment**: Repaired the backend deployment workflow and removed stale generated Wrangler artifacts from version control.
+- **Backend Routing**: Corrected production API routing and strengthened error handling around the Cloudflare service boundary.
+- **Backup Restore Reliability**: Batched restore writes and hardened database operations for larger datasets.
+- **Security and Dependencies**: Addressed audit findings and updated vulnerable Hono, React Router, Vitest, and related dependencies.
+
 ## [3.8.1] - 2026-05-01
 
 ### 🧾 Report Export & Photo Collage Stability

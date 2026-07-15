@@ -4,6 +4,8 @@
 
 The platform helps simulation teams turn high-fidelity clinical scenarios into usable safety work: structured post-session reports, reliable LST identification, follow-up tracking, searchable institutional learning, and documentation that can be shared with educators, safety leaders, and operational stakeholders.
 
+**Current release: v3.9.0** — provider-flexible AI report drafting, case-summary context, a redesigned clinical workspace, persistent dark mode, and a hardened Cloudflare deployment path.
+
 ---
 
 ## 🏛️ Project Overview
@@ -26,7 +28,9 @@ The system is designed around the practical workflow of a simulation program:
 *   **✅ Follow-Up Workflow Support**: Keeps safety findings visible after the session so unresolved threats can be reviewed, escalated, and closed.
 *   **🔍 Institutional Learning Search**: Search across prior scenarios, reports, and safety findings to recognize repeated patterns and recurring operational risks.
 *   **📸 Session Media Documentation**: Attach simulation photos and high-resolution media, then include them in exported reports as polished photo collages.
-*   **🤖 Clinical Assistant Support**: Uses retrieval and generation models to reduce documentation burden, surface relevant prior evidence, and support faster synthesis.
+*   **🤖 Provider-Flexible Clinical Assistant**: Uses OpenAI or Gemini for report drafting and LST extraction, with retrieval over prior simulation evidence to support faster synthesis.
+*   **🧾 Case-Aware Drafting**: Includes concise case-file summaries in the report prompt so generated drafts reflect the selected scenarios without overwhelming the model context.
+*   **🌗 Accessible Clinical Workspace**: A responsive clinical-editorial interface with shared, persistent light and dark themes across the simulation suite.
 
 ---
 
@@ -91,6 +95,14 @@ The system uses GitHub Actions for continuous delivery:
 - **Backend**: Update resource IDs in `worker/wrangler.toml` and run `npm run deploy` in the `worker/` directory.
 - **Proxying**: Production `/api/*` traffic flows through the Pages Function service binding `WASHU_SIM_INTEL_API`. Use an explicit `BACKEND_URL` only for local or break-glass testing.
 - **Access**: Cloudflare Access protects `intel.washuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview hostnames for `wustl.edu` users plus the configured admin email.
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for resource bindings, secrets, migrations, and deployment checks.
+
+---
+
+## 📦 Releases
+
+Release notes and version history are available in [GitHub Releases](https://github.com/salthepal/WashUSimIntelligence/releases) and [CHANGELOG.md](./CHANGELOG.md).
 
 ---
 
