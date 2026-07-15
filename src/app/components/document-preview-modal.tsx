@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
-import { Copy, Calendar, User, FileText, X, FolderOpen } from 'lucide-react';
+import { Copy, Calendar, User, X, Images } from 'lucide-react';
 import { Report, SessionNote } from '../App';
 import { CaseFile } from './case-files';
 import { toast } from 'sonner';
@@ -45,6 +45,14 @@ export function DocumentPreviewModal({
   const report = document as Report;
   const note = document as SessionNote;
   const caseFile = document as CaseFile;
+  const embeddedImages = (() => {
+    const stored = (metadata?.images || []) as string[];
+    if (stored.length) return stored;
+    const html = isReport ? report.htmlContent : isCase ? caseFile.htmlContent : '';
+    if (!html) return [];
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(parsed.querySelectorAll('img')).map((img) => img.src).filter(Boolean);
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,6 +124,21 @@ export function DocumentPreviewModal({
               </pre>
             </div>
           </div>
+
+          {embeddedImages.length > 0 && (
+            <section className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <Images className="h-4 w-4" /> Uploaded pictures ({embeddedImages.length})
+              </h3>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {embeddedImages.map((src, index) => (
+                  <a key={`${src.slice(0, 40)}-${index}`} href={src} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                    <img src={src} alt={`Uploaded picture ${index + 1}`} className="h-52 w-full object-contain transition-transform group-hover:scale-[1.02]" />
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Participants (for notes) */}
           {!isReport && note.participants && note.participants.length > 0 && (

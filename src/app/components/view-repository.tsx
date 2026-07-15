@@ -10,6 +10,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { Skeleton } from './ui/skeleton';
 import { toast } from 'sonner';
 import { formatDate } from '../utils/document';
+import { downloadReportDocx, downloadReportPdf } from '../utils/report-export';
 import { Edit2, Users, Sparkles, FileText, ChevronUp, ChevronDown, Calendar, GitCompare, Trash2, Eye, Search, Filter, CheckCircle2, Download } from 'lucide-react';
 
 interface ViewRepositoryProps {
@@ -232,6 +233,17 @@ export function ViewRepository({ reports, sessionNotes, generatedReports, onRefr
     } else {
       setComparingReports(prev => [...prev, report]);
       toast.success('Added to comparison');
+    }
+  };
+
+  const downloadReport = async (report: Report, format: 'docx' | 'pdf') => {
+    try {
+      if (format === 'docx') await downloadReportDocx(report);
+      else await downloadReportPdf(report);
+      toast.success(`Report downloaded as ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error(`Error exporting ${format}:`, error);
+      toast.error(`Failed to generate ${format.toUpperCase()} file`);
     }
   };
 
@@ -611,6 +623,12 @@ export function ViewRepository({ reports, sessionNotes, generatedReports, onRefr
                         <GitCompare className="w-4 h-4" />
                         {comparingReports.find(r => r.id === report.id) ? 'Remove' : 'Compare'}
                       </button>
+                      <button onClick={() => void downloadReport(report, 'docx')} className="bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        <Download className="w-4 h-4" /> DOCX
+                      </button>
+                      <button onClick={() => void downloadReport(report, 'pdf')} className="bg-rose-100 dark:bg-rose-900/30 hover:bg-rose-200 text-rose-700 dark:text-rose-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        <Download className="w-4 h-4" /> PDF
+                      </button>
                       <button
                         onClick={() => deleteReport(report.id, 'report')}
                         className="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
@@ -728,6 +746,12 @@ export function ViewRepository({ reports, sessionNotes, generatedReports, onRefr
                       >
                         <GitCompare className="w-4 h-4" />
                         {comparingReports.find(r => r.id === report.id) ? 'Remove' : 'Compare'}
+                      </button>
+                      <button onClick={() => void downloadReport(report, 'docx')} className="bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        <Download className="w-4 h-4" /> DOCX
+                      </button>
+                      <button onClick={() => void downloadReport(report, 'pdf')} className="bg-rose-100 dark:bg-rose-900/30 hover:bg-rose-200 text-rose-700 dark:text-rose-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                        <Download className="w-4 h-4" /> PDF
                       </button>
                       <button
                         onClick={() => deleteReport(report.id, 'report')}

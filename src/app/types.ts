@@ -49,7 +49,7 @@ export interface LST {
   title: string;
   description: string;
   status: 'Identified' | 'In Progress' | 'Resolved' | 'Recurring';
-  severity: 'High' | 'Medium' | 'Low';
+  severity: '' | 'High' | 'Medium' | 'Low';
   category: 'Equipment' | 'Process' | 'Resources' | 'Logistics';
   identifiedDate: string;
   lastSeenDate: string;

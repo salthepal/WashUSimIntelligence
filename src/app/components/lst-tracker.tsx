@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   AlertTriangle, Search, Filter, CheckCircle2, ShieldCheck, XCircle,
   TrendingUp, Users, Calendar, PlayCircle, Archive, AlertCircle,
-  Download, MapPin, Pencil, X, Save, Trash2, GitMerge, Plus, History
+  Download, MapPin, Pencil, X, Save, Trash2, GitMerge, Plus, History, Sparkles
 } from 'lucide-react';
 import { formatDate } from '../utils/document';
 import { LST } from '../types';
@@ -28,6 +28,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
   const [filterLocation, setFilterLocation] = useState<string>('All');
   const [showFilters, setShowFilters] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Edit modal
   const [editModal, setEditModal] = useState<EditModalState>(INITIAL_EDIT);
@@ -41,7 +42,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
   const [newLstData, setNewLstData] = useState<Partial<LST>>({
     title: '',
     description: '',
-    severity: 'Medium' as LST['severity'],
+    severity: '' as LST['severity'],
     category: 'Process' as LST['category'],
     status: 'Identified' as LST['status'],
     location: selectedSite === 'All Sites' ? '' : selectedSite,
@@ -90,7 +91,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
       const q = searchQuery.toLowerCase();
       const matchesSearch = !q || lst.title.toLowerCase().includes(q) || lst.description.toLowerCase().includes(q);
       const matchesStatus = filterStatus === 'All' || lst.status === filterStatus;
-      const matchesSeverity = filterSeverity === 'All' || lst.severity === filterSeverity;
+      const matchesSeverity = filterSeverity === 'All' || (filterSeverity === 'Not reviewed' ? !lst.severity : lst.severity === filterSeverity);
       const matchesCategory = filterCategory === 'All' || lst.category === filterCategory;
       const matchesLocation = filterLocation === 'All' || lst.location === filterLocation;
       const matchesSite = !selectedSite || selectedSite === 'All Sites' || lst.location === selectedSite;
@@ -100,19 +101,32 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
 
   const sortedLsts = useMemo(() => {
     return [...filteredLsts].sort((a: LST, b: LST) => {
-      const ord: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
-      const d = ord[a.severity] - ord[b.severity];
-      if (d !== 0) return d;
+      const siteOrder = (a.location || 'Unassigned site').localeCompare(b.location || 'Unassigned site');
+      if (siteOrder !== 0) return siteOrder;
       return new Date(b.lastSeenDate).getTime() - new Date(a.lastSeenDate).getTime();
     });
   }, [filteredLsts]);
+
+  const consolidationSuggestions = useMemo(() => {
+    const words = (lst: LST) => new Set(`${lst.title} ${lst.description}`.toLowerCase().match(/[a-z]{4,}/g) || []);
+    const suggestions: { first: LST; second: LST; score: number }[] = [];
+    for (let i = 0; i < lsts.length; i++) {
+      for (let j = i + 1; j < lsts.length; j++) {
+        const a = words(lsts[i]); const b = words(lsts[j]);
+        const overlap = [...a].filter((word) => b.has(word)).length;
+        const score = overlap / Math.max(1, new Set([...a, ...b]).size);
+        if (score >= 0.28) suggestions.push({ first: lsts[i], second: lsts[j], score });
+      }
+    }
+    return suggestions.sort((a, b) => b.score - a.score).slice(0, 6);
+  }, [lsts]);
 
   const stats = useMemo(() => {
     const siteLsts = (!selectedSite || selectedSite === 'All Sites') ? lsts : lsts.filter((l: LST) => l.location === selectedSite);
     return {
       total: siteLsts.length,
       active: siteLsts.filter((l: LST) => l.status === 'Identified').length,
-      highSeverity: siteLsts.filter((l: LST) => l.severity === 'High' && l.status !== 'Resolved').length,
+      unreviewedRisk: siteLsts.filter((l: LST) => !l.severity).length,
       resolved: siteLsts.filter((l: LST) => l.status === 'Resolved').length,
     };
   }, [lsts, selectedSite]);
@@ -200,7 +214,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
       setNewLstData({
         title: '',
         description: '',
-        severity: 'Medium' as LST['severity'],
+        severity: '' as LST['severity'],
         category: 'Process' as LST['category'],
         status: 'Identified' as LST['status'],
         location: selectedSite === 'All Sites' ? '' : selectedSite,
@@ -281,13 +295,12 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
     
     // Pre-fill merge data from selected items
     const selectedLsts = lsts.filter(l => selectedIds.has(l.id));
-    const highestSeverity = selectedLsts.some(l => l.severity === 'High') ? 'High' : 
-                          selectedLsts.some(l => l.severity === 'Medium') ? 'Medium' : 'Low';
+    const humanSeverity = selectedLsts.find(l => l.severity)?.severity || '';
     
     setNewLstData({
       title: `Merged: ${selectedLsts[0].title}`,
       description: selectedLsts.map(l => l.description).join('\n\n---\n\n'),
-      severity: highestSeverity as LST['severity'],
+      severity: humanSeverity as LST['severity'],
       category: selectedLsts[0].category as LST['category'],
       status: 'Identified' as LST['status'],
       location: selectedLsts[0].location,
@@ -315,6 +328,21 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const reviewSuggestion = (first: LST, second: LST) => {
+    const ids = new Set([first.id, second.id]);
+    setSelectedIds(ids);
+    setNewLstData({
+      title: `Consolidated: ${first.title}`,
+      description: `${first.description}\n\n---\n\n${second.description}`,
+      severity: (first.severity || second.severity || '') as LST['severity'],
+      category: first.category,
+      status: 'Identified',
+      location: first.location === second.location ? first.location : '',
+      recommendation: [first.recommendation, second.recommendation].filter(Boolean).join('\n\n'),
+    });
+    setIsMergeModalOpen(true);
   };
 
   const toggleSelection = (id: string) => {
@@ -360,6 +388,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
 
   // ── Badge Helpers ──
   const severityBadge = (sev: string) => {
+    if (!sev) return <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border border-dashed border-slate-300 text-slate-500 dark:border-slate-600 dark:text-slate-400">Risk not reviewed</span>;
     const cls = sev === 'High'
       ? 'bg-[#A51417] text-white'
       : sev === 'Medium'
@@ -405,14 +434,42 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
             <p className="text-xs text-slate-600 dark:text-slate-400">WashU Emergency Medicine &mdash; System Safety Monitor</p>
           </div>
         </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-[#007A33] hover:bg-[#006428] text-white font-bold rounded-lg transition-all text-sm shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          New LST
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowSuggestions((value) => !value)} className="flex items-center gap-1.5 px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 font-bold rounded-lg transition-all text-sm">
+            <Sparkles className="w-4 h-4" /> Consolidation suggestions
+            {consolidationSuggestions.length > 0 && <span className="rounded-full bg-purple-700 px-1.5 text-[10px] text-white">{consolidationSuggestions.length}</span>}
+          </button>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#007A33] hover:bg-[#006428] text-white font-bold rounded-lg transition-all text-sm shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> New LST
+          </button>
+        </div>
       </div>
+
+      {showSuggestions && (
+        <div className="rounded-xl border border-purple-200 bg-purple-50/70 p-4 dark:border-purple-800 dark:bg-purple-950/20">
+          <div className="mb-3">
+            <h3 className="font-bold text-purple-950 dark:text-purple-200">Possible consolidations for human review</h3>
+            <p className="text-xs text-purple-700 dark:text-purple-400">These are suggestions only. Nothing is combined until you review and confirm it.</p>
+          </div>
+          {consolidationSuggestions.length === 0 ? (
+            <p className="text-sm text-slate-600 dark:text-slate-400">No strong similarities found right now.</p>
+          ) : (
+            <div className="grid gap-2 md:grid-cols-2">
+              {consolidationSuggestions.map(({ first, second, score }) => (
+                <button key={`${first.id}-${second.id}`} onClick={() => reviewSuggestion(first, second)} className="rounded-lg border border-purple-200 bg-white p-3 text-left hover:border-purple-400 dark:border-purple-800 dark:bg-slate-900">
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{first.title}</div>
+                  <div className="my-1 text-[10px] font-bold uppercase text-purple-600">may overlap with</div>
+                  <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{second.title}</div>
+                  <div className="mt-2 flex gap-2 text-[10px] text-slate-500"><span>{first.location || 'Unassigned site'}</span><span>•</span><span>{second.location || 'Unassigned site'}</span><span className="ml-auto">{Math.round(score * 100)}% overlap</span></div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Stats Row ── */}
       <div className="grid grid-cols-4 gap-2 md:gap-4">
@@ -425,8 +482,8 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
           <div className="text-[10px] md:text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Active</div>
         </div>
         <div className="bg-red-50 dark:bg-red-950/30 border border-[#A51417]/30 dark:border-red-800 rounded-lg p-3 text-center">
-          <div className="text-2xl md:text-3xl font-black text-[#A51417] dark:text-red-300">{stats.highSeverity}</div>
-          <div className="text-[10px] md:text-xs font-semibold text-[#A51417] dark:text-red-400 uppercase tracking-wider">High Risk</div>
+          <div className="text-2xl md:text-3xl font-black text-[#A51417] dark:text-red-300">{stats.unreviewedRisk}</div>
+          <div className="text-[10px] md:text-xs font-semibold text-[#A51417] dark:text-red-400 uppercase tracking-wider">Needs Risk Review</div>
         </div>
         <div className="bg-green-50 dark:bg-green-950/30 border border-[#007A33]/30 dark:border-green-800 rounded-lg p-3 text-center">
           <div className="text-2xl md:text-3xl font-black text-[#007A33] dark:text-green-300">{stats.resolved}</div>
@@ -502,7 +559,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
             <div>
               <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 block">Severity</label>
               <div className="flex flex-wrap gap-1.5">
-                {['All', 'High', 'Medium', 'Low'].map((s) => (
+                {['All', 'Not reviewed', 'High', 'Medium', 'Low'].map((s) => (
                   <button key={s} onClick={() => setFilterSeverity(s)}
                     className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide transition-all ${
                       filterSeverity === s
@@ -934,6 +991,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
                     onChange={(e) => setNewLstData(prev => ({ ...prev, severity: e.target.value as LST['severity'] }))}
                     className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-sm"
                   >
+                    <option value="">Not reviewed (default)</option>
                     <option value="High">High</option>
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>

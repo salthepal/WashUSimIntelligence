@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Trash2, Calendar, Eye, FolderOpen, User, CheckCircle, FileText, FileUp } from 'lucide-react';
+import { Upload, Trash2, Calendar, User, CheckCircle, FileText, FileUp, X } from 'lucide-react';
 import { Report, API_BASE, getApiHeaders } from '../App';
 import { useDeleteReport } from '../hooks/useQueries';
 import { toast } from 'sonner';
@@ -27,7 +27,7 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
   const [uploaderName, setUploaderName] = useState('');
   const [sessionName, setSessionName] = useState('');
   const [sessionDate, setSessionDate] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<Report | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -50,17 +50,17 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
     e.stopPropagation();
     setDragActive(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+    addFiles(Array.from(e.dataTransfer.files || []));
+  };
 
-    const error = validateDocxFile(file);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    setSelectedFile(file);
-    toast.success(`File selected: ${file.name}`);
+  const addFiles = (files: File[]) => {
+    const valid = files.filter((file) => {
+      const error = validateDocxFile(file);
+      if (error) toast.error(`${file.name}: ${error}`);
+      return !error;
+    });
+    setSelectedFiles((current) => [...current, ...valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size))]);
+    if (valid.length) toast.success(`${valid.length} file${valid.length === 1 ? '' : 's'} added`);
   };
 
   const handleDebug = async () => {
@@ -93,36 +93,20 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Client-side filter for .docx files only
-    if (!file.name.toLowerCase().endsWith('.docx')) {
-      toast.error('Only .docx files are allowed');
-      e.target.value = ''; // Clear the input
-      return;
-    }
-
-    const error = validateDocxFile(file);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    setSelectedFile(file);
-    toast.success(`File selected: ${file.name}`);
+    addFiles(Array.from(e.target.files || []));
+    e.target.value = '';
   };
   
   const handleClearFile = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     const fileInput = document.getElementById('docx-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     toast.success('File cleared');
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select a file');
+    if (!selectedFiles.length) {
+      toast.error('Please select one or more files');
       return;
     }
 
@@ -132,28 +116,16 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
     try {
       setUploadProgress(30);
       
-      const processed = await processDocxFile(selectedFile);
+      const processedFiles = await Promise.all(selectedFiles.map(processDocxFile));
       setUploadProgress(70);
       
-      console.log('Uploading report:', { 
-        title: processed.title, 
-        contentLength: processed.content.length, 
-        htmlLength: processed.htmlContent.length,
-        sessionDate 
-      });
-      
-      // Sanitize data before sending
-      const payload = sanitizeJSON({
-        title: processed.title,
-        content: processed.content,
-        htmlContent: processed.htmlContent,
-        date: sessionDate || new Date().toISOString(),
-        metadata: {
-          uploaderName,
-          sessionName,
-          sessionDate,
-        }
-      });
+      const items = processedFiles.map((processed) => sanitizeJSON({
+          title: processed.title,
+          content: processed.content,
+          htmlContent: processed.htmlContent,
+          date: sessionDate || new Date().toISOString(),
+          metadata: { uploaderName, sessionName, sessionDate, images: processed.images }
+      }));
       
       // Upload with metadata
       const response = await fetch(`${API_BASE}/reports/upload`, {
@@ -162,7 +134,7 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
           ...getApiHeaders(),
           'X-Turnstile-Token': turnstileToken || '',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ items }),
       });
 
       setUploadProgress(90);
@@ -171,9 +143,9 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
 
       if (response.ok) {
         setUploadProgress(100);
-        toast.success(`Report "${processed.title}" uploaded successfully`);
+        toast.success(`${items.length} report${items.length === 1 ? '' : 's'} uploaded successfully`);
         // Reset form
-        setSelectedFile(null);
+        setSelectedFiles([]);
         setUploaderName('');
         setSessionName('');
         setSessionDate('');
@@ -257,6 +229,7 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
         >
           <input
             type="file"
+            multiple
             accept=".docx"
             onChange={handleFileSelect}
             disabled={uploading}
@@ -270,13 +243,13 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
             <FileUp className={`w-12 h-12 md:w-16 md:h-16 transition-colors ${dragActive ? 'text-blue-600' : 'text-blue-600'}`} />
             <div>
               <p className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {selectedFile ? selectedFile.name : dragActive ? 'Drop file here' : 'Drag & Drop or Click to Select'}
+                {selectedFiles.length ? `${selectedFiles.length} report${selectedFiles.length === 1 ? '' : 's'} selected` : dragActive ? 'Drop files here' : 'Drag & Drop or Click to Select Reports'}
               </p>
               <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                {selectedFile ? (
+                {selectedFiles.length ? (
                   <span className="flex items-center gap-1 justify-center">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    File selected - fill in details below
+                    Ready to upload as one batch
                   </span>
                 ) : (
                   `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB`
@@ -303,8 +276,16 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
         )}
 
         {/* Upload Form Fields */}
-        {selectedFile && (
+        {selectedFiles.length > 0 && (
           <div className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {selectedFiles.map((file) => (
+                <div key={`${file.name}-${file.size}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+                  <span className="truncate pr-2">{file.name}</span>
+                  <button type="button" onClick={() => setSelectedFiles((files) => files.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}><X className="h-4 w-4 text-slate-500" /></button>
+                </div>
+              ))}
+            </div>
             <FormField
               label="Uploader Name"
               value={uploaderName}
@@ -340,7 +321,7 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
                 fullWidth
                 icon={<Upload className="w-4 h-4 md:w-5 md:h-5" />}
               >
-                Upload Report
+                Upload {selectedFiles.length} Report{selectedFiles.length === 1 ? '' : 's'}
               </ActionButton>
               <button
                 onClick={handleClearFile}

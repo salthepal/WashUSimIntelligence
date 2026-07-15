@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Download, Eye, X, Edit, Save, CheckCircle, XCircle, Tag as TagIcon } from 'lucide-react';
+import { Download, Eye, X, Edit, Save, CheckCircle, XCircle, FileDown } from 'lucide-react';
 import { Report, API_BASE, getApiHeaders } from '../App';
 import { toast } from 'sonner';
-import { downloadDocxFromMarkdown } from '../utils/docx';
+import { downloadReportDocx, downloadReportPdf } from '../utils/report-export';
 
 interface ReportViewerProps {
   report: Report;
@@ -62,14 +62,24 @@ export function ReportViewer({ report, onClose, onUpdate }: ReportViewerProps) {
   const downloadAsDocx = async () => {
     setDownloading(true);
     try {
-      const content = editedContent || report.content;
-      await downloadDocxFromMarkdown(content, {
-        filename: `${report.title.replace(/[^a-z0-9]/gi, '_')}.docx`,
-      });
+      await downloadReportDocx({ ...report, editedContent });
       toast.success('Report downloaded as DOCX');
     } catch (error) {
       console.error('Error generating DOCX:', error);
       toast.error('Failed to generate DOCX file');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const downloadAsPdf = async () => {
+    setDownloading(true);
+    try {
+      await downloadReportPdf({ ...report, editedContent });
+      toast.success('Report downloaded as PDF');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF file');
     } finally {
       setDownloading(false);
     }
@@ -112,6 +122,14 @@ export function ReportViewer({ report, onClose, onUpdate }: ReportViewerProps) {
               >
                 <Download className="w-4 h-4" />
                 {downloading ? 'Downloading...' : 'Download DOCX'}
+              </button>
+              <button
+                onClick={downloadAsPdf}
+                disabled={downloading}
+                className="bg-red-700 hover:bg-red-800 disabled:bg-red-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+              >
+                <FileDown className="w-4 h-4" />
+                Download PDF
               </button>
               <button
                 onClick={onClose}
