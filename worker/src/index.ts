@@ -829,9 +829,13 @@ Required Report Section Order:
    1. # Title and session metadata (date, location, facilitators, attendees)
    2. Standard Definitions (In-Situ Simulation, Latent Safety Threat, Best Practice Support)
    3. ## Session Objectives
-   4. ## Latent Safety Threats (one ### subsection per threat, each with Current State, Impact, Recommendations)
-   5. ## Best Practice Supports (one ### subsection per support)
-   6. ## Summary and Next Steps
+   4. ## Case Summaries (one ### subsection for each case presented)
+      - **Presentation:** Summarize the patient's presentation and key clinical context in 1 to 2 sentences.
+      - **Intervention:** Summarize the principal intervention(s) and expected management in 1 to 2 sentences.
+      - Include every case provided in the case files, use the case title for each ### subsection, and keep these summaries brief.
+   5. ## Latent Safety Threats (one ### subsection per threat, each with Current State, Impact, Recommendations)
+   6. ## Best Practice Supports (one ### subsection per support)
+   7. ## Summary and Next Steps
 
 Phase 2: Content Synthesis & Tone Guardrails
 
