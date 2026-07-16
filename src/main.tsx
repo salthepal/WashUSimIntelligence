@@ -7,23 +7,6 @@ import App from "./app/App";
 import "./styles/index.css";
 
 const THEME_STORAGE_KEY = "washu-em-sim-theme";
-const CHUNK_RELOAD_KEY = "washu-chunk-reload-attempted";
-
-// A user can keep an older page open while Cloudflare publishes a deployment with
-// new hashed lazy-load chunks. Vite emits this event when that stale page can no
-// longer load one of those chunks. Recover once with a clean page load, while the
-// session guard prevents an infinite reload loop for genuine network failures.
-window.addEventListener("vite:preloadError", (event) => {
-  event.preventDefault();
-  if (!window.sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
-    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, Date.now().toString());
-    window.location.reload();
-  }
-});
-
-window.setTimeout(() => {
-  window.sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-}, 10_000);
 
 function getCookieTheme() {
   const match = document.cookie.match(/(?:^|;\s*)washu-em-sim-theme=(dark|light)(?:;|$)/);
