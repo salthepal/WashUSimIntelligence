@@ -27,6 +27,7 @@ import { TOUR_STEPS, KEYBOARD_SHORTCUTS } from './constants/tour';
 import { toast } from 'sonner';
 import { AppSidebar } from './components/app-sidebar';
 import { AdminSettings } from './components/admin-settings';
+import { Dashboard } from './components/dashboard';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { LST, Report, SessionNote } from './types';
 
@@ -38,9 +39,6 @@ if (typeof window !== 'undefined') {
     originalWarn.apply(console, args);
   };
 }
-
-// Lazy load Dashboard to reduce initial bundle size
-const Dashboard = lazy(() => import('./components/dashboard').then(module => ({ default: module.Dashboard })));
 
 export type { Report, SessionNote, LST } from './types';
 import { API_BASE, getApiHeaders } from './api';
