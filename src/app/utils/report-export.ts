@@ -60,6 +60,10 @@ export async function downloadReportPdf(report: Report) {
 
   for (const src of imageSources) {
     try {
+      const mimeMatch = src.match(/^data:image\/(png|jpe?g);/i);
+      const extensionMatch = src.match(/\.(png|jpe?g)(?:[?#]|$)/i);
+      const imageType = (mimeMatch?.[1] || extensionMatch?.[1] || '').toLowerCase();
+      if (!imageType) continue;
       const image = await new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
@@ -71,8 +75,8 @@ export async function downloadReportPdf(report: Report) {
       const width = image.naturalWidth * ratio;
       const height = image.naturalHeight * ratio;
       ensureSpace(height + 6);
-      const format = src.startsWith('data:image/png') ? 'PNG' : 'JPEG';
-      pdf.addImage(src, format, margin, y, width, height, undefined, 'FAST');
+      const format = imageType === 'png' ? 'PNG' : 'JPEG';
+      pdf.addImage(image, format, margin, y, width, height, undefined, 'FAST');
       y += height + 6;
     } catch {
       // A malformed legacy image should not prevent the report itself from exporting.

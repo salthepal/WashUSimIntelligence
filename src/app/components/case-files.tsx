@@ -36,6 +36,7 @@ interface CaseFilesProps {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_BATCH_SIZE = 25;
 
 export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
   const [uploading, setUploading] = useState(false);
@@ -134,8 +135,12 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
       if (error) toast.error(`${file.name}: ${error}`);
       return !error;
     });
-    setSelectedFiles((current) => [...current, ...valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size))]);
-    if (valid.length) toast.success(`${valid.length} case file${valid.length === 1 ? '' : 's'} added`);
+    setSelectedFiles((current) => {
+      const unique = valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size));
+      const available = Math.max(0, MAX_BATCH_SIZE - current.length);
+      if (unique.length > available) toast.error(`A maximum of ${MAX_BATCH_SIZE} case files can be uploaded at once`);
+      return [...current, ...unique.slice(0, available)];
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,14 +197,19 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
 
       if (response.ok) {
         setUploadProgress(100);
-        toast.success(`${items.length} case file${items.length === 1 ? '' : 's'} uploaded successfully`);
+        const failedIndexes = new Set<number>((responseData.failed || []).map((failure: any) => failure.index));
+        const uploadedCount = responseData.uploaded?.length ?? items.length - failedIndexes.size;
+        if (uploadedCount) toast.success(`${uploadedCount} case file${uploadedCount === 1 ? '' : 's'} uploaded successfully`);
+        if (failedIndexes.size) toast.error(`${failedIndexes.size} case file${failedIndexes.size === 1 ? '' : 's'} failed and remain queued for retry`);
         // Reset form and clear localStorage
-        setSelectedFiles([]);
-        setUploaderName('');
-        setCaseType('');
+        setSelectedFiles((files) => files.filter((_, index) => failedIndexes.has(index)));
+        if (!failedIndexes.size) {
+          setUploaderName('');
+          setCaseType('');
+        }
         setUploadProgress(0);
         setLastSaved(null);
-        localStorage.removeItem('caseFileDraft');
+        if (!failedIndexes.size) localStorage.removeItem('caseFileDraft');
         const fileInput = document.getElementById('case-file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         onRefresh();
@@ -334,7 +344,7 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
                     Ready to upload as one batch
                   </span>
                 ) : (
-                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB each · up to ${MAX_BATCH_SIZE} files`
                 )}
               </p>
             </div>

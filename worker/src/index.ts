@@ -102,7 +102,7 @@ app.get('/hydrate', verifyAdmin, async (c) => {
   try {
     const [reports, lsts, notes, cases] = await Promise.all([
       c.env.DB.prepare('SELECT * FROM reports ORDER BY created_at DESC').all(),
-      c.env.DB.prepare('SELECT * FROM lsts ORDER BY COALESCE(NULLIF(location, ""), "Unassigned site") ASC, status ASC, last_seen_date DESC').all(),
+      c.env.DB.prepare(`SELECT * FROM lsts ORDER BY COALESCE(NULLIF(location, ''), 'Unassigned site') ASC, status ASC, last_seen_date DESC`).all(),
       c.env.DB.prepare('SELECT * FROM session_notes ORDER BY created_at DESC').all(),
       c.env.DB.prepare('SELECT * FROM case_files ORDER BY date DESC').all()
     ]);
@@ -729,24 +729,29 @@ app.post('/reports/upload', verifyAdmin, verifyTurnstile, async (c) => {
     if (!parseResult.success) {
       return c.json({ error: 'Validation failed', details: parseResult.error.issues }, 400);
     }
-    const uploaded = [];
-    for (const reportData of parseResult.data.items) {
-      const id = reportData.id || `report_${crypto.randomUUID()}`;
-      const title = chooseCanonicalReportTitle({ id, title: reportData.title, content: reportData.content, type: reportData.type });
-      const content = ensureReportContentTitle(title, reportData.content);
-      await c.env.DB.prepare('INSERT INTO reports (id, title, content, type, metadata) VALUES (?, ?, ?, ?, ?)')
-        .bind(id, title, content, reportData.type || 'prior_report', JSON.stringify(reportData.metadata || {})).run();
-      const r2Key = getReportR2Key(id, reportData.type || 'prior_report');
-      const markdownContent = buildReportMarkdownDocument(title, content, reportData.type || 'prior_report', new Date().toISOString());
-      c.executionCtx.waitUntil(c.env.BUCKET.put(r2Key, markdownContent, {
-        httpMetadata: { contentType: 'text/markdown' },
-        customMetadata: { reportId: id, type: reportData.type || 'prior_report', title }
-      }));
-      await logAudit(c.env.DB, 'upload', reportData.type || 'report', title, id);
-      c.executionCtx.waitUntil(indexDocumentVector(c.env, id, title, content, 'report'));
-      uploaded.push({ id, title });
+    const uploaded: { id: string; title: string; index: number }[] = [];
+    const failed: { index: number; title: string; error: string }[] = [];
+    for (const [index, reportData] of parseResult.data.items.entries()) {
+      try {
+        const id = reportData.id || `report_${crypto.randomUUID()}`;
+        const title = chooseCanonicalReportTitle({ id, title: reportData.title, content: reportData.content, type: reportData.type });
+        const content = ensureReportContentTitle(title, reportData.content);
+        await c.env.DB.prepare('INSERT INTO reports (id, title, content, type, metadata) VALUES (?, ?, ?, ?, ?)')
+          .bind(id, title, content, reportData.type || 'prior_report', JSON.stringify(reportData.metadata || {})).run();
+        const r2Key = getReportR2Key(id, reportData.type || 'prior_report');
+        const markdownContent = buildReportMarkdownDocument(title, content, reportData.type || 'prior_report', new Date().toISOString());
+        c.executionCtx.waitUntil(c.env.BUCKET.put(r2Key, markdownContent, {
+          httpMetadata: { contentType: 'text/markdown' }, customMetadata: { reportId: id, type: reportData.type || 'prior_report', title }
+        }));
+        await logAudit(c.env.DB, 'upload', reportData.type || 'report', title, id);
+        c.executionCtx.waitUntil(indexDocumentVector(c.env, id, title, content, 'report'));
+        uploaded.push({ id, title, index });
+      } catch (error: any) {
+        failed.push({ index, title: reportData.title, error: error?.message || 'Upload failed' });
+        await logError(c.env.DB, 'report_upload_item', error, { index, title: reportData.title });
+      }
     }
-    return c.json({ success: true, uploaded });
+    return c.json({ success: failed.length === 0, uploaded, failed }, failed.length ? 207 : 200);
   } catch (error: any) {
     await logError(c.env.DB, 'report_upload', error);
     console.error(error);
@@ -1024,18 +1029,24 @@ app.post('/case-files/upload', verifyAdmin, verifyTurnstile, async (c) => {
     if (!parseResult.success) {
       return c.json({ error: 'Validation failed', details: parseResult.error.issues }, 400);
     }
-    const uploaded = [];
-    for (const data of parseResult.data.items) {
-      const id = data.id || `case_file_${crypto.randomUUID()}`;
-      await c.env.DB.prepare('INSERT INTO case_files (id, title, content, html_content, date, uploader_name, case_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
-        .bind(id, data.title || 'Untitled Case', data.content || '', data.htmlContent || '', data.date || new Date().toISOString(), data.metadata?.uploaderName || '', data.metadata?.caseType || '').run();
-      await logAudit(c.env.DB, 'upload', 'case_file', data.title || 'Untitled Case', id);
-      c.executionCtx.waitUntil(indexDocumentVector(c.env, id, data.title || 'Untitled Case', data.content || '', 'case_file', {
-        caseType: data.metadata?.caseType || '', uploaderName: data.metadata?.uploaderName || '',
-      }));
-      uploaded.push({ id, title: data.title || 'Untitled Case' });
+    const uploaded: { id: string; title: string; index: number }[] = [];
+    const failed: { index: number; title: string; error: string }[] = [];
+    for (const [index, data] of parseResult.data.items.entries()) {
+      try {
+        const id = data.id || `case_file_${crypto.randomUUID()}`;
+        await c.env.DB.prepare('INSERT INTO case_files (id, title, content, html_content, date, uploader_name, case_type) VALUES (?, ?, ?, ?, ?, ?, ?)')
+          .bind(id, data.title || 'Untitled Case', data.content || '', data.htmlContent || '', data.date || new Date().toISOString(), data.metadata?.uploaderName || '', data.metadata?.caseType || '').run();
+        await logAudit(c.env.DB, 'upload', 'case_file', data.title || 'Untitled Case', id);
+        c.executionCtx.waitUntil(indexDocumentVector(c.env, id, data.title || 'Untitled Case', data.content || '', 'case_file', {
+          caseType: data.metadata?.caseType || '', uploaderName: data.metadata?.uploaderName || '',
+        }));
+        uploaded.push({ id, title: data.title || 'Untitled Case', index });
+      } catch (error: any) {
+        failed.push({ index, title: data.title, error: error?.message || 'Upload failed' });
+        await logError(c.env.DB, 'case_file_upload_item', error, { index, title: data.title });
+      }
     }
-    return c.json({ success: true, uploaded });
+    return c.json({ success: failed.length === 0, uploaded, failed }, failed.length ? 207 : 200);
   } catch (error: any) {
     await logError(c.env.DB, 'case_file_upload', error);
     console.error(error);

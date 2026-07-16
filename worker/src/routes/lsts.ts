@@ -30,7 +30,7 @@ lstsRouter.get('/', verifyAdmin, async (c) => {
     const limit = Math.min(Number(c.req.query('limit') || 100), 500);
     const offset = Number(c.req.query('offset') || 0);
     
-    const { results } = await c.env.DB.prepare('SELECT * FROM lsts ORDER BY COALESCE(NULLIF(location, ""), "Unassigned site") ASC, CASE WHEN status = "Resolved" THEN 1 ELSE 0 END, last_seen_date DESC LIMIT ? OFFSET ?')
+    const { results } = await c.env.DB.prepare(`SELECT * FROM lsts ORDER BY COALESCE(NULLIF(location, ''), 'Unassigned site') ASC, CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END, last_seen_date DESC LIMIT ? OFFSET ?`)
       .bind(limit, offset)
       .all();
     return c.json({ 

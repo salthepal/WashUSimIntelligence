@@ -108,6 +108,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
   }, [filteredLsts]);
 
   const consolidationSuggestions = useMemo(() => {
+    if (!showSuggestions) return [];
     const words = (lst: LST) => new Set(`${lst.title} ${lst.description}`.toLowerCase().match(/[a-z]{4,}/g) || []);
     const suggestions: { first: LST; second: LST; score: number }[] = [];
     for (let i = 0; i < lsts.length; i++) {
@@ -119,7 +120,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
       }
     }
     return suggestions.sort((a, b) => b.score - a.score).slice(0, 6);
-  }, [lsts]);
+  }, [lsts, showSuggestions]);
 
   const stats = useMemo(() => {
     const siteLsts = (!selectedSite || selectedSite === 'All Sites') ? lsts : lsts.filter((l: LST) => l.location === selectedSite);

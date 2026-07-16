@@ -19,6 +19,7 @@ interface UploadReportsProps {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_BATCH_SIZE = 25;
 
 export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
   const [uploading, setUploading] = useState(false);
@@ -59,8 +60,12 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
       if (error) toast.error(`${file.name}: ${error}`);
       return !error;
     });
-    setSelectedFiles((current) => [...current, ...valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size))]);
-    if (valid.length) toast.success(`${valid.length} file${valid.length === 1 ? '' : 's'} added`);
+    setSelectedFiles((current) => {
+      const unique = valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size));
+      const available = Math.max(0, MAX_BATCH_SIZE - current.length);
+      if (unique.length > available) toast.error(`A maximum of ${MAX_BATCH_SIZE} reports can be uploaded at once`);
+      return [...current, ...unique.slice(0, available)];
+    });
   };
 
   const handleDebug = async () => {
@@ -143,12 +148,17 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
 
       if (response.ok) {
         setUploadProgress(100);
-        toast.success(`${items.length} report${items.length === 1 ? '' : 's'} uploaded successfully`);
+        const failedIndexes = new Set<number>((responseData.failed || []).map((failure: any) => failure.index));
+        const uploadedCount = responseData.uploaded?.length ?? items.length - failedIndexes.size;
+        if (uploadedCount) toast.success(`${uploadedCount} report${uploadedCount === 1 ? '' : 's'} uploaded successfully`);
+        if (failedIndexes.size) toast.error(`${failedIndexes.size} report${failedIndexes.size === 1 ? '' : 's'} failed and remain queued for retry`);
         // Reset form
-        setSelectedFiles([]);
-        setUploaderName('');
-        setSessionName('');
-        setSessionDate('');
+        setSelectedFiles((files) => files.filter((_, index) => failedIndexes.has(index)));
+        if (!failedIndexes.size) {
+          setUploaderName('');
+          setSessionName('');
+          setSessionDate('');
+        }
         setUploadProgress(0);
         const fileInput = document.getElementById('docx-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
@@ -252,7 +262,7 @@ export function UploadReports({ reports, onRefresh }: UploadReportsProps) {
                     Ready to upload as one batch
                   </span>
                 ) : (
-                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB each · up to ${MAX_BATCH_SIZE} files`
                 )}
               </p>
             </div>
