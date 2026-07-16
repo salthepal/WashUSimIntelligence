@@ -35,9 +35,9 @@ export function sanitizeHTML(html: string): string {
     ALLOWED_TAGS: [
       'p', 'br', 'b', 'i', 'em', 'strong', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
       'ul', 'ol', 'li', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'blockquote', 'pre', 'code'
+      'blockquote', 'pre', 'code', 'img', 'figure', 'figcaption'
     ],
-    ALLOWED_ATTR: ['class', 'id', 'style'],
+    ALLOWED_ATTR: ['class', 'id', 'style', 'src', 'alt', 'title', 'width', 'height'],
     FORCE_BODY: true
   });
 }

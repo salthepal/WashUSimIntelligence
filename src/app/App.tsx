@@ -48,29 +48,26 @@ export { API_BASE, getApiHeaders };
 
 function DataLoadingPanel() {
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-3">
-      <div className="w-full max-w-2xl rounded-lg border border-slate-200 dark:border-slate-700 bg-white/85 dark:bg-slate-900/85 shadow-sm p-5 md:p-7">
-        <div className="flex items-start gap-4">
-          <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#17413f] text-white">
-            <Database className="h-6 w-6" />
-            <Loader2 className="absolute -right-1 -top-1 h-4 w-4 animate-spin text-[#A51417]" />
+    <div className="relative min-h-[70vh] overflow-hidden rounded-2xl bg-[#102f2d] px-5 text-white shadow-xl md:px-10">
+      <div className="absolute -left-24 top-[-6rem] h-72 w-72 rounded-full bg-[#007A33]/30 blur-3xl" />
+      <div className="absolute -right-20 bottom-[-8rem] h-80 w-80 rounded-full bg-[#A51417]/25 blur-3xl" />
+      <div className="relative flex min-h-[70vh] flex-col items-center justify-center text-center">
+        <div className="relative mb-7 flex h-20 w-20 items-center justify-center rounded-2xl border border-white/15 bg-white/10 shadow-2xl backdrop-blur">
+          <Database className="h-9 w-9" />
+          <span className="absolute inset-[-8px] animate-ping rounded-[1.4rem] border border-emerald-300/30" />
+        </div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">WashU Emergency Medicine</p>
+        <h2 className="text-2xl font-bold tracking-tight md:text-4xl">Preparing your simulation intelligence</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 md:text-base">
+          Securely loading reports, cases, session notes, and safety insights.
+        </p>
+        <div className="mt-9 w-full max-w-md">
+          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-1/2 animate-pulse rounded-full bg-gradient-to-r from-emerald-400 via-white to-[#A51417]" />
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100">
-              Loading WashU Sim Intelligence
-            </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Connecting to the database and loading reports, session notes, case files, and LSTs.
-            </p>
-            <div className="mt-5 space-y-3" aria-hidden="true">
-              <Skeleton className="h-3 w-full rounded-full" />
-              <Skeleton className="h-3 w-5/6 rounded-full" />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                <Skeleton className="h-20 rounded-lg" />
-                <Skeleton className="h-20 rounded-lg" />
-                <Skeleton className="h-20 rounded-lg" />
-              </div>
-            </div>
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-white/55">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            This usually takes only a moment
           </div>
         </div>
       </div>

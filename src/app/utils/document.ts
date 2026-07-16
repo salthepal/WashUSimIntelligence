@@ -7,6 +7,7 @@ export interface ProcessedDocument {
   title: string;
   content: string;
   htmlContent: string;
+  images: string[];
 }
 
 /**
@@ -21,7 +22,18 @@ export async function processDocxFile(file: File): Promise<ProcessedDocument> {
   const plainText = sanitizeText(plainTextResult.value);
   
   // Convert to HTML for htmlContent field
-  const htmlResult = await mammoth.convertToHtml({ arrayBuffer });
+  const images: string[] = [];
+  const htmlResult = await mammoth.convertToHtml(
+    { arrayBuffer },
+    {
+      convertImage: mammoth.images.imgElement(async (image) => {
+        const base64 = await image.read('base64');
+        const src = `data:${image.contentType || 'image/png'};base64,${base64}`;
+        images.push(src);
+        return { src };
+      }),
+    },
+  );
   const htmlContent = sanitizeHTML(htmlResult.value);
   
   // Extract title from first heading in HTML
@@ -36,6 +48,7 @@ export async function processDocxFile(file: File): Promise<ProcessedDocument> {
     title,
     content: plainText,
     htmlContent,
+    images,
   };
 }
 

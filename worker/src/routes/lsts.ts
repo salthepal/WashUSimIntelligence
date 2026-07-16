@@ -9,7 +9,7 @@ const lstSchema = z.object({
   title: z.string().min(1, "Title is required").default('Untitled'),
   description: z.string().optional().default(''),
   recommendation: z.string().optional().default(''),
-  severity: z.string().optional().default('Medium'),
+  severity: z.string().optional().default(''),
   status: z.string().optional().default('Identified'),
   category: z.string().optional().default(''),
   location: z.string().optional().default(''),
@@ -30,7 +30,7 @@ lstsRouter.get('/', verifyAdmin, async (c) => {
     const limit = Math.min(Number(c.req.query('limit') || 100), 500);
     const offset = Number(c.req.query('offset') || 0);
     
-    const { results } = await c.env.DB.prepare('SELECT * FROM lsts ORDER BY CASE WHEN status = "Resolved" THEN 1 ELSE 0 END, CASE WHEN severity = "High" THEN 0 WHEN severity = "Medium" THEN 1 ELSE 2 END, last_seen_date DESC LIMIT ? OFFSET ?')
+    const { results } = await c.env.DB.prepare(`SELECT * FROM lsts ORDER BY COALESCE(NULLIF(location, ''), 'Unassigned site') ASC, CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END, last_seen_date DESC LIMIT ? OFFSET ?`)
       .bind(limit, offset)
       .all();
     return c.json({ 
@@ -108,7 +108,7 @@ lstsRouter.post('/add', verifyAdmin, async (c) => {
     const id = lst.id || `lst_${crypto.randomUUID()}`;
     
     await c.env.DB.prepare('INSERT INTO lsts (id, title, description, recommendation, severity, status, category, location, identified_date, last_seen_date, recurrence_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .bind(id, lst.title || 'Untitled', lst.description || '', lst.recommendation || '', lst.severity || 'Medium', lst.status || 'Identified', lst.category || '', lst.location || '', lst.identifiedDate || new Date().toISOString(), lst.lastSeenDate || new Date().toISOString(), 1)
+      .bind(id, lst.title || 'Untitled', lst.description || '', lst.recommendation || '', lst.severity || '', lst.status || 'Identified', lst.category || '', lst.location || '', lst.identifiedDate || new Date().toISOString(), lst.lastSeenDate || new Date().toISOString(), 1)
       .run();
       
     await logAudit(c.env.DB, 'create', 'lst', lst.title || 'Untitled LST', id);
@@ -118,7 +118,7 @@ lstsRouter.post('/add', verifyAdmin, async (c) => {
       lst.title || 'Untitled',
       `${lst.description || ''}\n\n${lst.recommendation || ''}`,
       'lst',
-      { category: lst.category || '', severity: lst.severity || 'Medium', status: lst.status || 'Identified' }
+      { category: lst.category || '', severity: lst.severity || '', status: lst.status || 'Identified' }
     ));
     return c.json({ success: true, id });
   } catch (error: any) {
@@ -142,7 +142,7 @@ lstsRouter.post('/merge', verifyAdmin, async (c) => {
       mergedLST.title || 'Merged LST',
       mergedLST.description || '',
       mergedLST.recommendation || '',
-      mergedLST.severity || 'Medium',
+      mergedLST.severity || '',
       mergedLST.status || 'Identified',
       mergedLST.category || '',
       mergedLST.location || '',
@@ -161,7 +161,7 @@ lstsRouter.post('/merge', verifyAdmin, async (c) => {
       mergedLST.title || 'Merged LST',
       `${mergedLST.description || ''}\n\n${mergedLST.recommendation || ''}`,
       'lst',
-      { category: mergedLST.category || '', severity: mergedLST.severity || 'Medium', status: mergedLST.status || 'Identified' }
+      { category: mergedLST.category || '', severity: mergedLST.severity || '', status: mergedLST.status || 'Identified' }
     ));
     return c.json({ success: true, id });
   } catch (error: any) {

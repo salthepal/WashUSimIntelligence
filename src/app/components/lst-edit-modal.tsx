@@ -78,6 +78,7 @@ export function LstEditModal({ editModal, setEditModal, saving, onSave }: LstEdi
                 onChange={(e) => setEditModal(prev => ({ ...prev, severity: e.target.value }))}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500"
               >
+                <option value="">Not reviewed</option>
                 <option value="High">High</option>
                 <option value="Medium">Medium</option>
                 <option value="Low">Low</option>

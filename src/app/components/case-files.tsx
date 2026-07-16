@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Upload, Trash2, Calendar, Eye, FolderOpen, User, CheckCircle, Save } from 'lucide-react';
+import { Upload, Trash2, Calendar, FolderOpen, User, CheckCircle, Save, X } from 'lucide-react';
 import { API_BASE, getApiHeaders, updateCaseFile } from '../api';
 import { toast } from 'sonner';
 import { useConfirmDialog } from './ui/confirm-dialog';
@@ -36,13 +36,14 @@ interface CaseFilesProps {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_BATCH_SIZE = 25;
 
 export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploaderName, setUploaderName] = useState('');
   const [caseType, setCaseType] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<CaseFile | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -55,18 +56,18 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
 
   // Auto-save to localStorage
   const saveToLocalStorage = useCallback(() => {
-    if (uploaderName.trim() || caseType.trim() || selectedFile) {
+    if (uploaderName.trim() || caseType.trim() || selectedFiles.length) {
       setAutoSaving(true);
       localStorage.setItem('caseFileDraft', JSON.stringify({
         uploaderName,
         caseType,
-        fileName: selectedFile?.name || null,
+        fileNames: selectedFiles.map((file) => file.name),
         savedAt: new Date().toISOString(),
       }));
       setLastSaved(new Date());
       setTimeout(() => setAutoSaving(false), 500);
     }
-  }, [uploaderName, caseType, selectedFile]);
+  }, [uploaderName, caseType, selectedFiles]);
 
   // Auto-save to localStorage every 30 seconds
   useEffect(() => {
@@ -125,56 +126,38 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
     e.stopPropagation();
     setDragActive(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+    addFiles(Array.from(e.dataTransfer.files || []));
+  };
 
-    // Client-side filter for .docx files only
-    if (!file.name.toLowerCase().endsWith('.docx')) {
-      toast.error('Only .docx files are allowed');
-      return;
-    }
-
-    const error = validateDocxFile(file);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    setSelectedFile(file);
-    toast.success(`File selected: ${file.name}`);
+  const addFiles = (files: File[]) => {
+    const valid = files.filter((file) => {
+      const error = validateDocxFile(file);
+      if (error) toast.error(`${file.name}: ${error}`);
+      return !error;
+    });
+    setSelectedFiles((current) => {
+      const unique = valid.filter((file) => !current.some((item) => item.name === file.name && item.size === file.size));
+      const available = Math.max(0, MAX_BATCH_SIZE - current.length);
+      if (unique.length > available) toast.error(`A maximum of ${MAX_BATCH_SIZE} case files can be uploaded at once`);
+      return [...current, ...unique.slice(0, available)];
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Client-side filter for .docx files only
-    if (!file.name.toLowerCase().endsWith('.docx')) {
-      toast.error('Only .docx files are allowed');
-      e.target.value = ''; // Clear the input
-      return;
-    }
-
-    const error = validateDocxFile(file);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    setSelectedFile(file);
-    toast.success(`File selected: ${file.name}`);
+    addFiles(Array.from(e.target.files || []));
+    e.target.value = '';
   };
 
   const handleClearFile = () => {
-    setSelectedFile(null);
+    setSelectedFiles([]);
     const fileInput = document.getElementById('case-file-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     toast.success('File cleared');
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select a file');
+    if (!selectedFiles.length) {
+      toast.error('Please select one or more files');
       return;
     }
 
@@ -184,17 +167,10 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
     try {
       setUploadProgress(30);
       
-      const processed = await processDocxFile(selectedFile);
+      const processedFiles = await Promise.all(selectedFiles.map(processDocxFile));
       setUploadProgress(70);
       
-      console.log('Uploading case file:', { 
-        title: processed.title, 
-        contentLength: processed.content.length, 
-        htmlLength: processed.htmlContent.length 
-      });
-      
-      // Sanitize data before sending
-      const payload = sanitizeJSON({
+      const items = processedFiles.map((processed) => sanitizeJSON({
         title: processed.title,
         content: processed.content,
         htmlContent: processed.htmlContent,
@@ -203,7 +179,7 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
           uploaderName,
           caseType,
         }
-      });
+      }));
       
       // Upload with metadata
       const response = await fetch(`${API_BASE}/case-files/upload`, {
@@ -212,7 +188,7 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
           ...getApiHeaders(),
           'X-Turnstile-Token': turnstileToken || '',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ items }),
       });
 
       setUploadProgress(90);
@@ -221,14 +197,19 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
 
       if (response.ok) {
         setUploadProgress(100);
-        toast.success(`Case file \"${processed.title}\" uploaded successfully`);
+        const failedIndexes = new Set<number>((responseData.failed || []).map((failure: any) => failure.index));
+        const uploadedCount = responseData.uploaded?.length ?? items.length - failedIndexes.size;
+        if (uploadedCount) toast.success(`${uploadedCount} case file${uploadedCount === 1 ? '' : 's'} uploaded successfully`);
+        if (failedIndexes.size) toast.error(`${failedIndexes.size} case file${failedIndexes.size === 1 ? '' : 's'} failed and remain queued for retry`);
         // Reset form and clear localStorage
-        setSelectedFile(null);
-        setUploaderName('');
-        setCaseType('');
+        setSelectedFiles((files) => files.filter((_, index) => failedIndexes.has(index)));
+        if (!failedIndexes.size) {
+          setUploaderName('');
+          setCaseType('');
+        }
         setUploadProgress(0);
         setLastSaved(null);
-        localStorage.removeItem('caseFileDraft');
+        if (!failedIndexes.size) localStorage.removeItem('caseFileDraft');
         const fileInput = document.getElementById('case-file-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         onRefresh();
@@ -340,6 +321,7 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
         >
           <input
             type="file"
+            multiple
             accept=".docx"
             onChange={handleFileSelect}
             disabled={uploading}
@@ -353,16 +335,16 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
             <FolderOpen className={`w-12 h-12 md:w-16 md:h-16 transition-colors ${dragActive ? 'text-[#007A33]' : 'text-[#007A33]'}`} />
             <div>
               <p className="text-base md:text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {selectedFile ? selectedFile.name : dragActive ? 'Drop case file here' : 'Drag & Drop or Click to Select Case File'}
+                {selectedFiles.length ? `${selectedFiles.length} case file${selectedFiles.length === 1 ? '' : 's'} selected` : dragActive ? 'Drop case files here' : 'Drag & Drop or Click to Select Case Files'}
               </p>
               <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                {selectedFile ? (
+                {selectedFiles.length ? (
                   <span className="flex items-center gap-1 justify-center">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    File selected - ready to upload
+                    Ready to upload as one batch
                   </span>
                 ) : (
-                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+                  `DOCX files only, max ${MAX_FILE_SIZE / (1024 * 1024)}MB each · up to ${MAX_BATCH_SIZE} files`
                 )}
               </p>
             </div>
@@ -386,8 +368,16 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
         )}
 
         {/* Upload Form Fields */}
-        {selectedFile && (
+        {selectedFiles.length > 0 && (
           <div className="space-y-4">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {selectedFiles.map((file) => (
+                <div key={`${file.name}-${file.size}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+                  <span className="truncate pr-2">{file.name}</span>
+                  <button type="button" onClick={() => setSelectedFiles((files) => files.filter((item) => item !== file))} aria-label={`Remove ${file.name}`}><X className="h-4 w-4 text-slate-500" /></button>
+                </div>
+              ))}
+            </div>
             <FormField
               label="Uploader Name"
               placeholder="Enter your name"
@@ -415,7 +405,7 @@ export function CaseFiles({ caseFiles, onRefresh }: CaseFilesProps) {
                 fullWidth
                 icon={<Upload className="w-4 h-4 md:w-5 md:h-5" />}
               >
-                Upload Case File
+                Upload {selectedFiles.length} Case File{selectedFiles.length === 1 ? '' : 's'}
               </ActionButton>
               <button
                 type="button"
