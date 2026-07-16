@@ -4,7 +4,7 @@
 /* Bump the hashed application stylesheet after the July 2026 deployment transition.
    This lets browsers discard a stale failed asset response and retrieve the active CSS. */
 :root {
-  --washu-stylesheet-revision: 20260716;
+  --washu-stylesheet-revision: 20260716-2;
 }
 
 /* Formatted report styles */
