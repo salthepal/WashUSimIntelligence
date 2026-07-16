@@ -1,6 +1,12 @@
 @import './tailwind.css';
 @import './theme.css';
 
+/* Bump the hashed application stylesheet after the July 2026 deployment transition.
+   This lets browsers discard a stale failed asset response and retrieve the active CSS. */
+:root {
+  --washu-stylesheet-revision: 20260716;
+}
+
 /* Formatted report styles */
 .formatted-report {
   line-height: 1.6;
