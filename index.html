@@ -5,6 +5,20 @@
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>WashU EM Sim Intel</title>
+      <script>
+        // Recover when an open page requests a hashed CSS/JS asset while a new
+        // Cloudflare deployment is replacing the previous asset manifest.
+        window.addEventListener('error', function (event) {
+          var target = event.target;
+          var assetUrl = target && (target.href || target.src);
+          var isBuildAsset = assetUrl && assetUrl.indexOf('/assets/') !== -1;
+          var reloadKey = 'washu-chunk-reload-attempted';
+          if (isBuildAsset && !window.sessionStorage.getItem(reloadKey)) {
+            window.sessionStorage.setItem(reloadKey, Date.now().toString());
+            window.location.reload();
+          }
+        }, true);
+      </script>
       
       <!-- Fonts: Fraunces (display) + Spline Sans (body) + Spline Sans Mono — matches the hub/edu portal -->
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,4 +37,3 @@
       <script type="module" src="/src/main.tsx"></script>
     </body>
   </html>
-  
