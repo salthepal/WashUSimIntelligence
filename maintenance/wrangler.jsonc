@@ -8,10 +8,6 @@
   "preview_urls": false,
   "routes": [
     {
-      "pattern": "intel.wuemsim.org/*",
-      "zone_name": "wuemsim.org"
-    },
-    {
       "pattern": "intel.washuemsim.org/*",
       "zone_name": "washuemsim.org"
     }
