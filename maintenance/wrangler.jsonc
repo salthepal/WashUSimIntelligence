@@ -1,0 +1,25 @@
+{
+  "$schema": "../../washuemsim-hub/node_modules/wrangler/config-schema.json",
+  "name": "washu-sim-intel-maintenance",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "intel.wuemsim.org/*",
+      "zone_name": "wuemsim.org"
+    },
+    {
+      "pattern": "intel.washuemsim.org/*",
+      "zone_name": "washuemsim.org"
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "head_sampling_rate": 1
+    }
+  }
+}
