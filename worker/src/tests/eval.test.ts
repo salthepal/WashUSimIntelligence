@@ -1,5 +1,5 @@
 /**
- * WashU Sim Intelligence — Eval Suite
+ * WUEM Sim Intel — Eval Suite
  *
  * Tests pure TypeScript logic with no live API calls or Workers runtime.
  * Six areas:
@@ -35,7 +35,7 @@ function checkJustCultureTone(text: string): string[] {
 }
 
 const CLEAN_REPORT = `
-# WashU EM Sim Intelligence — Post-Session Report
+# WUEM Sim Intel — Post-Session Report
 
 ## Session Overview
 The team encountered challenges with equipment availability during the simulated

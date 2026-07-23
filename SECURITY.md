@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest release of **WashU Sim Intelligence** is supported for security updates. We recommend all users keep their deployments up to date with the `main` branch.
+Only the latest release of **WUEM Sim Intel** is supported for security updates. We recommend all users keep their deployments up to date with the `main` branch.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -31,7 +31,7 @@ We will acknowledge your report within **48 hours** and provide an estimated tim
 
 ## 🔒 Platform Security Features
 
-WashU Sim Intelligence leverages several Cloudflare security primitives:
+WUEM Sim Intel leverages several Cloudflare security primitives:
 - **XSS Protection**: Inputs are sanitized via **DOMPurify** before rendering.
 - **Administrative Access**: Clinical data endpoints require a configured admin token.
 - **CSRF/Abuse Protection**: Sensitive write endpoints require custom headers and upload/generation routes require **Cloudflare Turnstile**.

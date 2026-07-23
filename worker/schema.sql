@@ -1,4 +1,4 @@
--- Cloudflare D1 SQL Schema for WashU EM Sim Intelligence
+-- Cloudflare D1 SQL Schema for WUEM Sim Intel
 
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT PRIMARY KEY,

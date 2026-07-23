@@ -1,6 +1,6 @@
 # Documentation Index
 
-Welcome to the WashU Emergency Medicine Simulation & Safety Intelligence Platform documentation. This index will help you find the information you need.
+Welcome to the WUEM Sim Intel documentation. This index will help you find the information you need.
 
 ## 📚 Core Documentation
 

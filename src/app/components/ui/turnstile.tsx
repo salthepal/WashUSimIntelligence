@@ -17,7 +17,7 @@ export function Turnstile({ onVerify, onExpire, siteKey }: TurnstileProps) {
   useEffect(() => { onVerifyRef.current = onVerify; }, [onVerify]);
   useEffect(() => { onExpireRef.current = onExpire; }, [onExpire]);
 
-  // Default sitekey for WashU EM Sim Intelligence (Cloudflare managed)
+  // Default sitekey for WUEM Sim Intel (Cloudflare managed)
   const defaultSiteKey = '0x4AAAAAAC1gQskkjSorxR2e';
 
   // Only re-mount the widget when the siteKey changes — NOT when callbacks change.

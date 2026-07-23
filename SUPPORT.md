@@ -1,6 +1,6 @@
-# Support for WashU Sim Intelligence
+# Support for WUEM Sim Intel
 
-Thank you for using **WashU Sim Intelligence**! We want to ensure you have the best experience possible while using this platform for clinical simulation and safety tracking.
+Thank you for using **WUEM Sim Intel**! We want to ensure you have the best experience possible while using this platform for clinical simulation and safety tracking.
 
 ## ❓ How to Get Help
 

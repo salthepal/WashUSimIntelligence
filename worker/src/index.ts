@@ -1,5 +1,5 @@
 /**
- * WashU EM Sim Intelligence Worker.
+ * WUEM Sim Intel Worker.
  */
 import { Hono } from 'hono';
 import { streamText } from 'hono/streaming';
@@ -66,6 +66,7 @@ type Bindings = {
 };
 
 const ALLOWED_ORIGINS = [
+  'https://intel.wuemsim.org',
   'https://intel.washuemsim.org',
   'https://washusimintelligence.pages.dev',
   'http://localhost:5173',
@@ -91,7 +92,7 @@ app.use('*', noStore);
 
 app.get('/', (c) => {
   return c.json({
-    message: 'WashU EM Sim Intelligence API is Running',
+    message: 'WUEM Sim Intel API is Running',
     version: APP_VERSION,
     status: 'Operational'
   });
@@ -796,7 +797,7 @@ app.put('/reports/:id', verifyAdmin, async (c) => {
   }
 });
 
-// Prompt Template (Official WashU EM Simulation Version)
+// Prompt Template (Official WUEM Simulation Version)
 const PROMPT_TEMPLATE = `Role: You are an expert Medical Simulation Specialist and Education Consultant for the Washington University Department of Emergency Medicine. Your goal is to generate professional, actionable Post-Session Reports that prioritize psychological safety and a "Just Culture" framework.
 
 Objective: Generate a Post-Session Report based on the provided session notes and case files that mirrors the structure of the prior reports while maintaining a supportive, growth-oriented tone.

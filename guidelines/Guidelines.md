@@ -1,4 +1,4 @@
-# WashU Sim Intelligence — AI Guidelines
+# WUEM Sim Intel — AI Guidelines
 
 Guidelines for AI assistants working in this codebase.
 

@@ -285,7 +285,7 @@ export function Dashboard({ reports, sessionNotes, generatedReports, lsts, isLoa
       {/* ── Intro Statement ── */}
       <div className="bg-slate-50 dark:bg-[#181c1a] border border-slate-200 dark:border-[#303834] rounded-xl p-5">
         <p className="text-sm leading-relaxed text-slate-700 dark:text-[#b8c0bc]">
-          <span className="font-bold text-slate-900 dark:text-[#f3f1eb]">WashU Sim Intelligence</span> centralizes simulation data for the WashU Department of Emergency Medicine. Use it to track <span className="font-semibold text-[#A51417] dark:text-[#f08a6c]">Latent Safety Threats (LSTs)</span>, draft post-session reports with <span className="font-semibold text-[#17413f] dark:text-[#6db3ad]">AI</span>, and search a <span className="font-semibold text-[#245855] dark:text-[#8bc8c2]">repository</span> of prior scenario data.
+          <span className="font-bold text-slate-900 dark:text-[#f3f1eb]">WUEM Sim Intel</span> centralizes simulation data for the WashU Department of Emergency Medicine. Use it to track <span className="font-semibold text-[#A51417] dark:text-[#f08a6c]">Latent Safety Threats (LSTs)</span>, draft post-session reports with <span className="font-semibold text-[#17413f] dark:text-[#6db3ad]">AI</span>, and search a <span className="font-semibold text-[#245855] dark:text-[#8bc8c2]">repository</span> of prior scenario data.
         </p>
       </div>
 

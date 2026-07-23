@@ -1,6 +1,6 @@
-# WashU Sim Intelligence
+# WUEM Sim Intel
 
-**WashU Sim Intelligence** is a simulation improvement and Latent Safety Threat (LST) management system developed for the **Washington University School of Medicine, Department of Emergency Medicine**.
+**WUEM Sim Intel** is a simulation improvement and Latent Safety Threat (LST) management system developed for the **Washington University School of Medicine, Department of Emergency Medicine**.
 
 The platform helps simulation teams turn high-fidelity clinical scenarios into usable safety work: structured post-session reports, reliable LST identification, follow-up tracking, searchable institutional learning, and documentation that can be shared with educators, safety leaders, and operational stakeholders.
 
@@ -10,7 +10,7 @@ The platform helps simulation teams turn high-fidelity clinical scenarios into u
 
 ## 🏛️ Project Overview
 
-WashU Sim Intelligence is specialized for clinical simulation programs that need more than a written debrief summary. It supports a **Just Culture** approach by helping teams document what happened, identify system vulnerabilities, assign follow-up, and preserve lessons learned across repeated simulations.
+WUEM Sim Intel is specialized for clinical simulation programs that need more than a written debrief summary. It supports a **Just Culture** approach by helping teams document what happened, identify system vulnerabilities, assign follow-up, and preserve lessons learned across repeated simulations.
 
 The system is designed around the practical workflow of a simulation program:
 
@@ -38,7 +38,7 @@ The system is designed around the practical workflow of a simulation program:
 
 Built on a Cloudflare-native stack for reliability, fast access, and secure clinical education workflows:
 
-- **Frontend**: React (Vite + TypeScript + Tailwind) deployed to Cloudflare Pages at `https://intel.washuemsim.org`.
+- **Frontend**: React (Vite + TypeScript + Tailwind) deployed to Cloudflare Pages at `https://intel.wuemsim.org`.
 - **Backend API**: Cloudflare Workers (Hono) running at the edge. The public `workers.dev` route is disabled, and the Pages Function proxy calls the Worker through the `WASHU_SIM_INTEL_API` service binding.
 - **Decision Support**: 
   - **Library Q&A**: Retrieval-augmented answers over the local simulation knowledge base.
@@ -91,10 +91,10 @@ Built on a Cloudflare-native stack for reliability, fast access, and secure clin
 
 The system uses GitHub Actions for continuous delivery:
 
-- **Frontend**: Automatically deployed via **Cloudflare Pages** and served at `https://intel.washuemsim.org`.
+- **Frontend**: Automatically deployed via **Cloudflare Pages** and served at `https://intel.wuemsim.org`.
 - **Backend**: Update resource IDs in `worker/wrangler.toml` and run `npm run deploy` in the `worker/` directory.
 - **Proxying**: Production `/api/*` traffic flows through the Pages Function service binding `WASHU_SIM_INTEL_API`. Use an explicit `BACKEND_URL` only for local or break-glass testing.
-- **Access**: Cloudflare Access protects `intel.washuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview hostnames for `wustl.edu` users plus the configured admin email.
+- **Access**: Cloudflare Access protects `intel.wuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview hostnames for `wustl.edu` users plus the configured admin email.
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for resource bindings, secrets, migrations, and deployment checks.
 

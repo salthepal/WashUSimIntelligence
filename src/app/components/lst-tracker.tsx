@@ -432,7 +432,7 @@ export function LSTTracker({ selectedSite }: LSTTrackerProps) {
           </div>
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-100">Safety Threat Tracker</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400">WashU Emergency Medicine &mdash; System Safety Monitor</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">WUEM Sim Intel &mdash; System Safety Monitor</p>
           </div>
         </div>
         <div className="flex gap-2">

@@ -54,7 +54,7 @@ function DataLoadingPanel() {
           <Database className="h-9 w-9" />
           <span className="absolute inset-[-8px] animate-ping rounded-[1.4rem] border border-emerald-300/30" />
         </div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">WashU Emergency Medicine</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">WUEM Simulation</p>
         <h2 className="text-2xl font-bold tracking-tight md:text-4xl">Preparing your simulation intelligence</h2>
         <p className="mt-3 max-w-xl text-sm leading-6 text-white/65 md:text-base">
           Securely loading reports, cases, session notes, and safety insights.
@@ -235,7 +235,7 @@ export default function App() {
                   )}
                   <FileText className="w-6 h-6 md:w-7 md:h-7 flex-shrink-0" />
                   <div className="min-w-0">
-                    <h1 className="text-base md:text-xl font-bold truncate">WashU Emergency Medicine: Simulation & Safety Intelligence</h1>
+                    <h1 className="text-base md:text-xl font-bold truncate">WUEM Sim Intel</h1>
                     <p className="text-xs text-white/70 truncate hidden md:block">Post-Session Report &amp; LST Management Platform</p>
                   </div>
                 </div>
@@ -246,7 +246,7 @@ export default function App() {
                     size="sm"
                     className="text-white hover:bg-white/20 hover:text-white px-2 md:px-3"
                   >
-                    <a href="https://washuemsim.org/" aria-label="Return to home">
+                    <a href="https://wuemsim.org/" aria-label="Return to home">
                       <Home className="w-4 h-4" />
                       <span className="hidden sm:inline">Return to home</span>
                     </a>

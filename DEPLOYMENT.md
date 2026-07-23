@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document provides step-by-step instructions for deploying **WashU Sim Intelligence** to the Cloudflare-native production stack.
+This document provides step-by-step instructions for deploying **WUEM Sim Intel** to the Cloudflare-native production stack.
 
 ## 🏛️ Architecture Overview
 The platform has been migrated from legacy Supabase infrastructure to a high-concurrency Cloudflare architecture:
@@ -110,7 +110,7 @@ The frontend uses `/api` in production so requests pass through the Cloudflare P
 - **Audit Logging**: All administrative actions are recorded in the central D1 `audit_logs` table.
 - **Administrative Access**: Clinical data endpoints require `X-Admin-Token`; upload and generation writes also require `X-Turnstile-Token`.
 - **Clinical Data Handling**: Do not enter patient identifiers or protected health information unless the deployment has been reviewed under the institution's privacy, retention, and access-control requirements.
-- **Zero Trust**: Cloudflare Access should protect `intel.washuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview deployment URLs.
+- **Zero Trust**: Cloudflare Access should protect `intel.wuemsim.org`, `washusimintelligence.pages.dev`, and Pages preview deployment URLs.
 
 ---
 

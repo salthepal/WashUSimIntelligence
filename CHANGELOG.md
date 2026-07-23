@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the WashU EM Sim Intelligence Platform will be documented in this file.
+All notable changes to WUEM Sim Intel will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -13,12 +13,12 @@ A feature release that makes report generation provider-flexible, adds richer ca
 ### ✨ Added
 - **Provider-Agnostic AI Backend**: Report generation and LST extraction can use OpenAI or Gemini through a shared provider layer, with clearer configuration and fallback behavior.
 - **Case Summaries in Report Drafting**: Selected case files now contribute concise summaries to report prompts, improving scenario-specific context while controlling prompt size.
-- **Shared Dark Mode**: Added a manually controlled theme that persists across the WashU EM Simulation suite.
+- **Shared Dark Mode**: Added a manually controlled theme that persists across the WUEM Simulation suite.
 - **Loading and Recovery States**: Added a clear initial data-loading experience and improved recovery when an administrator token expires or becomes invalid.
 - **Automated Dependency Maintenance**: Added Dependabot configuration and guarded auto-merge automation for safe dependency updates.
 
 ### 🛠️ Changed
-- **Clinical-Editorial Redesign**: Refreshed the dashboard, navigation, report workflows, notifications, and visual system to match the broader WashU EM Simulation suite.
+- **Clinical-Editorial Redesign**: Refreshed the dashboard, navigation, report workflows, notifications, and visual system to match the broader WUEM Simulation suite.
 - **Cloudflare Architecture**: Routed production API traffic through the Pages Function service binding and tightened Worker deployment configuration.
 - **Data Loading and Exports**: Improved database hydration behavior and lazy-loaded large export libraries to reduce initial application work.
 - **Documentation and CI**: Expanded deployment, security, and architecture guidance and added continuous integration checks.
@@ -157,7 +157,7 @@ A major architectural overhaul migrating from Supabase to a high-performance, co
 
 ### 🎉 Initial Release - Comprehensive Intelligence Platform
 
-The first production-ready release of the WashU Emergency Medicine Simulation & Safety Intelligence Platform with 26 major optimization features.
+The first production-ready release of WUEM Sim Intel with 26 major optimization features.
 
 ### ✨ Added
 
@@ -341,7 +341,7 @@ This changelog is maintained to help:
 
 ---
 
-**Note**: This is the initial release (1.0.0) marking the transition from development to production. All features have been thoroughly tested for clinical use in the WashU Emergency Medicine simulation environment.
+**Note**: This is the initial release (1.0.0) marking the transition from development to production. All features have been thoroughly tested for clinical use in the WUEM simulation environment.
 
 For detailed feature documentation, see [README.md](./README.md).  
 For deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).  

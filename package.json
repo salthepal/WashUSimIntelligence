@@ -3,7 +3,7 @@
   "private": true,
   "version": "3.9.0",
   "type": "module",
-  "description": "WashU Emergency Medicine Simulation & Safety Intelligence Platform - AI-powered post-session report generation and LST tracking",
+  "description": "WUEM Sim Intel - AI-powered post-session report generation and LST tracking",
   "author": "Washington University School of Medicine - Emergency Medicine",
   "license": "SEE LICENSE IN LICENSE.md",
   "repository": {
@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/salthepal/WashUSimIntelligence/issues"
   },
-  "homepage": "https://intel.washuemsim.org",
+  "homepage": "https://intel.wuemsim.org",
   "keywords": [
     "medical-education",
     "simulation",

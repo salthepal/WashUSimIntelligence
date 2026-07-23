@@ -27,8 +27,8 @@ function syncVersion() {
   if (fs.existsSync(workerIndexPath)) {
     let content = fs.readFileSync(workerIndexPath, 'utf8');
     const updatedContent = content.replace(
-      /WashU EM Sim Intelligence Worker - v\d+\.\d+\.\d+/,
-      `WashU EM Sim Intelligence Worker - v${version}`
+      /WUEM Sim Intel Worker - v\d+\.\d+\.\d+/,
+      `WUEM Sim Intel Worker - v${version}`
     );
     if (content !== updatedContent) {
       fs.writeFileSync(workerIndexPath, updatedContent);

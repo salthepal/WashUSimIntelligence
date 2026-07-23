@@ -136,7 +136,7 @@ function SidebarWordmark({ collapsed }: { collapsed: boolean }) {
       <div
         className="w-8 h-8 rounded-md flex items-center justify-center bg-primary flex-shrink-0"
         role="img"
-        aria-label="WashU Sim Intelligence"
+        aria-label="WUEM Sim Intel"
       >
         <span className="text-primary-foreground text-xs font-black tracking-tight" aria-hidden="true">W</span>
       </div>
@@ -148,7 +148,7 @@ function SidebarWordmark({ collapsed }: { collapsed: boolean }) {
         <span className="text-primary-foreground text-sm font-black tracking-tight">W</span>
       </div>
       <div className="leading-tight font-mono min-w-0">
-        <div className="text-[9px] font-normal text-slate-400 dark:text-[#b8c0bc] uppercase tracking-widest">WashU EM</div>
+        <div className="text-[9px] font-normal text-slate-400 dark:text-[#b8c0bc] uppercase tracking-widest">WUEM</div>
         <div className="text-[13px] font-semibold text-primary tracking-wide">SIM INTEL</div>
       </div>
     </div>

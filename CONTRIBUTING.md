@@ -1,6 +1,6 @@
-# Contributing to WashU Sim Intelligence
+# Contributing to WUEM Sim Intel
 
-Thank you for your interest in contributing to the **WashU Emergency Medicine Simulation & Safety Intelligence Platform**. This project is a Cloudflare-native platform for high-fidelity clinical simulation tracking.
+Thank you for your interest in contributing to **WUEM Sim Intel**. This project is a Cloudflare-native platform for high-fidelity clinical simulation tracking.
 
 ## 🎯 Our Mission
 
