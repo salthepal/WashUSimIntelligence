@@ -27,6 +27,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Security regression tests
+        run: npm run test:security
+
       - name: Build
         run: npm run build
 
