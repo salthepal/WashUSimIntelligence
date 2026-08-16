@@ -5,6 +5,7 @@ import App from "./app/App";
 import "./styles/index.css";
 
 const THEME_STORAGE_KEY = "washu-em-sim-theme";
+const LEGACY_QUERY_CACHE_STORAGE_KEY = "REACT_QUERY_OFFLINE_CACHE";
 
 function getCookieTheme() {
   const match = document.cookie.match(/(?:^|;\s*)washu-em-sim-theme=(dark|light)(?:;|$)/);
@@ -12,6 +13,7 @@ function getCookieTheme() {
 }
 
 try {
+  window.localStorage.removeItem(LEGACY_QUERY_CACHE_STORAGE_KEY);
   const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   const legacyDarkMode = window.localStorage.getItem("darkMode");
   const cookieTheme = getCookieTheme();

@@ -30,7 +30,8 @@
     "preview": "vite preview",
     "version:sync": "node utils/sync-version.js",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/*.test.ts && cd worker && npm test"
+    "test:security": "tsx --test tests/*.test.ts",
+    "test": "npm run test:security && cd worker && npm test"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -111,6 +112,7 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.2.2",
+    "tsx": "^4.23.12",
     "typescript": "^5.8.2",
     "vite": "^6.4.2"
   }
