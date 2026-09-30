@@ -13,7 +13,9 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    # Only when Dependabot itself pushed. If Copilot or a person adds commits,
+    # the PR is no longer the update this policy evaluated, so a human merges it.
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Read Dependabot metadata
