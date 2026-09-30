@@ -104,8 +104,8 @@ jobs:
               if (( age < 3600 )); then
                 echo "#$num: required checks not reported yet; will retry next run"; continue
               fi
-              authors=$(gh api "repos/$REPO/pulls/$num/commits?per_page=100" \
-                          --jq '[.[] | (.author.login // "unknown")] | unique | join(",")')
+              authors=$(gh api --paginate --slurp "repos/$REPO/pulls/$num/commits?per_page=100" \
+                          | jq -r '[.[][] | (.author.login // "unknown")] | unique | join(",")')
               if [[ "$authors" != "dependabot[bot]" ]]; then
                 echo "#$num: required checks never ran, but PR has non-Dependabot commits; leaving for a human"; continue
               fi
@@ -119,6 +119,12 @@ jobs:
               fi
               if (( $(jq length <<<"$requests") >= 2 )); then
                 echo "#$num: 2 rebase requests already made; leaving for a human"; continue
+              fi
+              # Re-check the head right before posting so a push that landed during
+              # this run (Copilot or a person) never gets a rebase request.
+              current=$(gh pr view "$num" -R "$REPO" --json headRefOid --jq .headRefOid)
+              if [[ "$current" != "$sha" ]]; then
+                echo "#$num: head moved to ${current:0:7} during this run; will re-evaluate next run"; continue
               fi
               echo "#$num: required check(s) never ran ($(jq -r 'join(", ")' <<<"$missing")); asking Dependabot to rebase"
               GH_TOKEN="$TRIGGER_PAT" gh pr comment "$num" -R "$REPO" --body "@dependabot rebase"
