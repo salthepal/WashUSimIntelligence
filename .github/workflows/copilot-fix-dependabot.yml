@@ -1,0 +1,129 @@
+name: Copilot fix failing Dependabot PRs
+
+# Every 30 minutes, find open Dependabot PRs whose *required* checks failed and
+# ask Copilot cloud agent to fix them. Runs on a schedule (not on Dependabot
+# events) because Dependabot-triggered workflows cannot read Actions secrets.
+#
+# The @copilot comment is posted with COPILOT_TRIGGER_PAT (fine-grained PAT,
+# Pull requests: write, these repos only) because comments made with
+# GITHUB_TOKEN cannot trigger Copilot. All reads use GITHUB_TOKEN.
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Only consider this PR number (optional)"
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+  actions: read
+
+concurrency:
+  group: copilot-fix-dependabot
+  cancel-in-progress: false
+
+jobs:
+  hand-off:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TRIGGER_PAT: ${{ secrets.COPILOT_TRIGGER_PAT }}
+      REPO: ${{ github.repository }}
+      ONLY_PR: ${{ inputs.pr }}
+      MAX_ATTEMPTS: "2"
+    steps:
+      - name: Find failing Dependabot PRs and hand them to Copilot
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$TRIGGER_PAT" ]]; then
+            echo "::warning::COPILOT_TRIGGER_PAT is not set; nothing to do."
+            exit 0
+          fi
+
+          prs=$(gh pr list -R "$REPO" --state open --author "app/dependabot" \
+                  --json number,headRefOid,baseRefName,title --limit 50)
+          if [[ -n "$ONLY_PR" ]]; then
+            prs=$(jq --argjson n "$ONLY_PR" '[.[] | select(.number == $n)]' <<<"$prs")
+          fi
+          echo "Open Dependabot PRs: $(jq length <<<"$prs")"
+
+          jq -c '.[]' <<<"$prs" | while read -r pr; do
+            num=$(jq -r .number <<<"$pr")
+            sha=$(jq -r .headRefOid <<<"$pr")
+            base=$(jq -r .baseRefName <<<"$pr")
+            title=$(jq -r .title <<<"$pr")
+            marker="<!-- copilot-fix-dependabot:${sha} -->"
+
+            # Required checks come from the branch rulesets, so this stays
+            # correct if the CI job names change.
+            required=$(gh api "repos/$REPO/rules/branches/$base" \
+              --jq '[.[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context] | unique')
+            if [[ "$(jq length <<<"$required")" == "0" ]]; then
+              echo "#$num: no required checks on $base; skipping"; continue
+            fi
+
+            runs=$(gh api "repos/$REPO/commits/$sha/check-runs?per_page=100" --jq '.check_runs')
+            failed=$(jq -c --argjson req "$required" \
+              '[.[] | select(.app.slug=="github-actions")
+                    | select(.name as $n | $req | index($n))
+                    | select(.status=="completed" and (.conclusion=="failure" or .conclusion=="timed_out"))]' <<<"$runs")
+            pending=$(jq --argjson req "$required" \
+              '[.[] | select(.name as $n | $req | index($n)) | select(.status!="completed")] | length' <<<"$runs")
+
+            if [[ "$(jq length <<<"$failed")" == "0" ]]; then
+              echo "#$num: no failed required checks"; continue
+            fi
+            if [[ "$pending" != "0" ]]; then
+              echo "#$num: required checks still running; will retry next run"; continue
+            fi
+
+            comments=$(gh api "repos/$REPO/issues/$num/comments?per_page=100" --jq '[.[].body]')
+            if jq -e --arg m "$marker" 'any(.[]; contains($m))' <<<"$comments" >/dev/null; then
+              echo "#$num: already handed off for $sha"; continue
+            fi
+            attempts=$(jq '[.[] | select(contains("<!-- copilot-fix-dependabot:"))] | length' <<<"$comments")
+            if (( attempts >= MAX_ATTEMPTS )); then
+              echo "#$num: reached $MAX_ATTEMPTS Copilot attempts; leaving for a human"; continue
+            fi
+
+            # Collect the tail of each failed job's log (check-run id == job id).
+            logs=""
+            for row in $(jq -r '.[] | "\(.id)|\(.name)"' <<<"$failed"); do
+              id="${row%%|*}"; name="${row#*|}"
+              tail=$(gh api "repos/$REPO/actions/jobs/$id/logs" 2>/dev/null \
+                      | sed -E 's/^[0-9T:.-]+Z //' \
+                      | grep -v -E '^##\[(group|endgroup)\]' \
+                      | tail -n 60 || true)
+              logs+=$'\n'"**\`$name\` failed** — last lines of the job log:"$'\n\n```text\n'"${tail:-<log unavailable>}"$'\n```\n'
+            done
+            names=$(jq -r '[.[].name] | join(", ")' <<<"$failed")
+
+            body=$(cat <<EOF
+          @copilot The required CI check(s) **${names}** failed on this Dependabot PR (\`${title}\`, commit \`${sha:0:7}\`). Please fix it.
+
+          ${logs}
+          **How to fix**
+          1. Find the root cause from the logs above. Typical causes: peer-dependency conflicts, a dependency that must be bumped together with this one, type errors or API changes from the new version, or a stale lockfile.
+          2. Make the smallest behavior-preserving change that makes the required checks pass: adjust related dependency versions, regenerate the lockfile with \`npm install\`, and update source code or types only where the new version requires it.
+          3. Run the same install, typecheck, test, and build commands CI runs, and confirm they pass before pushing.
+
+          **Rules**
+          - Do not use \`--force\` or \`--legacy-peer-deps\`, and do not skip, weaken, or delete tests (including security-regression tests).
+          - Do not modify anything under \`.github/\` (workflows, Dependabot, or repo config).
+          - Do not change runtime behavior beyond what the upgrade requires.
+          - If this cannot be fixed safely within these rules, do not push. Instead, reply on this PR explaining the blocker and what a human should decide.
+
+          ${marker}
+          EOF
+            )
+
+            echo "#$num: handing off to Copilot ($names)"
+            GH_TOKEN="$TRIGGER_PAT" gh pr comment "$num" -R "$REPO" --body "$body"
+          done
