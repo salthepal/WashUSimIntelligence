@@ -84,7 +84,8 @@ jobs:
               echo "#$num: required checks still running; will retry next run"; continue
             fi
 
-            comments=$(gh api "repos/$REPO/issues/$num/comments?per_page=100" --jq '[.[].body]')
+            # Paginate so markers are never missed on long PR threads.
+            comments=$(gh api --paginate --slurp "repos/$REPO/issues/$num/comments?per_page=100" | jq '[.[][].body]')
             if jq -e --arg m "$marker" 'any(.[]; contains($m))' <<<"$comments" >/dev/null; then
               echo "#$num: already handed off for $sha"; continue
             fi
@@ -100,9 +101,11 @@ jobs:
               tail=$(gh api "repos/$REPO/actions/jobs/$id/logs" 2>/dev/null \
                       | sed -E 's/^[0-9T:.-]+Z //' \
                       | grep -v -E '^##\[(group|endgroup)\]' \
-                      | tail -n 60 || true)
+                      | tail -n 60 | tail -c 6000 || true)
               logs+=$'\n'"**\`$name\` failed** — last lines of the job log:"$'\n\n```text\n'"${tail:-<log unavailable>}"$'\n```\n'
             done
+            # Keep the comment well under GitHub's 65,536-character limit.
+            if (( ${#logs} > 30000 )); then logs="${logs:0:30000}"$'\n```\n_(log excerpt truncated)_\n'; fi
             names=$(jq -r '[.[].name] | join(", ")' <<<"$failed")
 
             body=$(cat <<EOF
@@ -123,6 +126,12 @@ jobs:
           ${marker}
           EOF
             )
+
+            # Re-check the head right before posting so Copilot never gets stale logs.
+            current=$(gh pr view "$num" -R "$REPO" --json headRefOid --jq .headRefOid)
+            if [[ "$current" != "$sha" ]]; then
+              echo "#$num: head moved to ${current:0:7} during this run; will re-evaluate next run"; continue
+            fi
 
             echo "#$num: handing off to Copilot ($names)"
             GH_TOKEN="$TRIGGER_PAT" gh pr comment "$num" -R "$REPO" --body "$body"
