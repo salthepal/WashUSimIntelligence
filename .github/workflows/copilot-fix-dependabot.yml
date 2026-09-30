@@ -98,10 +98,16 @@ jobs:
             logs=""
             for row in $(jq -r '.[] | "\(.id)|\(.name)"' <<<"$failed"); do
               id="${row%%|*}"; name="${row#*|}"
-              tail=$(gh api "repos/$REPO/actions/jobs/$id/logs" 2>/dev/null \
-                      | sed -E 's/^[0-9T:.-]+Z //' \
-                      | grep -v -E '^##\[(group|endgroup)\]' \
-                      | tail -n 60 | tail -c 6000 || true)
+              # --log-failed prints "job<TAB>step<TAB>line" for failed steps only.
+              if raw=$(gh run view -R "$REPO" --job "$id" --log-failed 2>&1); then
+                tail=$(cut -f3- <<<"$raw" \
+                        | sed -E 's/^[0-9T:.-]+Z //' \
+                        | grep -v -E '^##\[(group|endgroup)\]' \
+                        | tail -n 60 | tail -c 6000 || true)
+              else
+                echo "::warning::#$num: could not fetch log for job $id: ${raw:0:300}"
+                tail=""
+              fi
               logs+=$'\n'"**\`$name\` failed** — last lines of the job log:"$'\n\n```text\n'"${tail:-<log unavailable>}"$'\n```\n'
             done
             # Keep the comment well under GitHub's 65,536-character limit.
