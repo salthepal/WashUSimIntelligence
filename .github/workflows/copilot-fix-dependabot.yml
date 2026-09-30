@@ -8,6 +8,10 @@ name: Copilot fix failing Dependabot PRs
 # Pull requests: write, these repos only) because comments made with
 # GITHUB_TOKEN cannot trigger Copilot. All reads use GITHUB_TOKEN.
 #
+# If a required check never ran on a PR's head commit (for example, the PR was
+# opened before CI existed), it posts "@dependabot rebase" instead, so CI runs
+# and the next pass can act on the result.
+#
 # Before handing off, auto-merge is disabled on the PR: once Copilot changes
 # code, the PR is no longer the low-risk update the auto-merge policy approved,
 # so a human merges it after review.
@@ -70,12 +74,6 @@ jobs:
             branch=$(jq -r .headRefName <<<"$pr")
             marker="<!-- copilot-fix-dependabot:${sha} -->"
 
-            # Actions-version updates only change .github/, which Copilot is not
-            # allowed to edit, so they are left for a human.
-            if [[ "$branch" == dependabot/github_actions/* ]]; then
-              echo "#$num: GitHub Actions update; skipping"; continue
-            fi
-
             # Required checks come from the branch rulesets, so this stays
             # correct if the CI job names change.
             required=$(gh api "repos/$REPO/rules/branches/$base" \
@@ -92,11 +90,49 @@ jobs:
             pending=$(jq --argjson req "$required" \
               '[.[] | select(.name as $n | $req | index($n)) | select(.status!="completed")] | length' <<<"$runs")
 
+            if [[ "$pending" != "0" ]]; then
+              echo "#$num: required checks still running; will retry next run"; continue
+            fi
+
+            # Required checks that never ran on this commit. Ask Dependabot to
+            # rebase so CI runs; there is nothing for Copilot to fix yet.
+            missing=$(jq -c --argjson req "$required" \
+              '[ $req[] as $r | select(([.[] | select(.name == $r)] | length) == 0) | $r ]' <<<"$runs")
+            if [[ "$(jq length <<<"$missing")" != "0" ]]; then
+              head_date=$(gh api "repos/$REPO/commits/$sha" --jq '.commit.committer.date')
+              age=$(( $(date +%s) - $(date -d "$head_date" +%s) ))
+              if (( age < 3600 )); then
+                echo "#$num: required checks not reported yet; will retry next run"; continue
+              fi
+              authors=$(gh api "repos/$REPO/pulls/$num/commits?per_page=100" \
+                          --jq '[.[] | (.author.login // "unknown")] | unique | join(",")')
+              if [[ "$authors" != "dependabot[bot]" ]]; then
+                echo "#$num: required checks never ran, but PR has non-Dependabot commits; leaving for a human"; continue
+              fi
+              # Dependabot only acts on a bare command, so dedupe by timing rather
+              # than a hidden marker: skip if a request is newer than the head commit.
+              requests=$(gh api --paginate --slurp "repos/$REPO/issues/$num/comments?per_page=100" \
+                           | jq --arg u "$trigger_login" \
+                               '[.[][] | select(.user.login == $u and (.body | test("^\\s*@dependabot (rebase|recreate)\\s*$")))]')
+              if jq -e --arg d "$head_date" 'any(.[]; .created_at > $d)' <<<"$requests" >/dev/null; then
+                echo "#$num: rebase already requested; waiting for Dependabot"; continue
+              fi
+              if (( $(jq length <<<"$requests") >= 2 )); then
+                echo "#$num: 2 rebase requests already made; leaving for a human"; continue
+              fi
+              echo "#$num: required check(s) never ran ($(jq -r 'join(", ")' <<<"$missing")); asking Dependabot to rebase"
+              GH_TOKEN="$TRIGGER_PAT" gh pr comment "$num" -R "$REPO" --body "@dependabot rebase"
+              continue
+            fi
+
             if [[ "$(jq length <<<"$failed")" == "0" ]]; then
               echo "#$num: no failed required checks"; continue
             fi
-            if [[ "$pending" != "0" ]]; then
-              echo "#$num: required checks still running; will retry next run"; continue
+
+            # Actions-version updates only change .github/, which Copilot is not
+            # allowed to edit, so a failing one is left for a human.
+            if [[ "$branch" == dependabot/github_actions/* ]]; then
+              echo "#$num: failing GitHub Actions update; leaving for a human"; continue
             fi
 
             # Paginate so markers are never missed on long PR threads.
