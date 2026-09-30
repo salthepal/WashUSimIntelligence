@@ -102,6 +102,7 @@ jobs:
               if raw=$(gh run view -R "$REPO" --job "$id" --log-failed 2>&1); then
                 tail=$(cut -f3- <<<"$raw" \
                         | sed -E 's/^[0-9T:.-]+Z //' \
+                        | sed '/^Post job cleanup\./,$d' \
                         | grep -v -E '^##\[(group|endgroup)\]' \
                         | tail -n 60 | tail -c 6000 || true)
               else
