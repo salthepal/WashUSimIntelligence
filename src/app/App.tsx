@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useHydration, useReports, useNotes, useCaseFiles, useGeneratedReports, useLSTs } from './hooks/useQueries';
-import Joyride, { Step } from 'react-joyride';
+import { Joyride, type Step } from 'react-joyride';
 
 // --- LAZY LOADED COMPONENTS (Optimization #3) ---
 const UploadReports = lazy(() => import('./components/upload-reports').then(m => ({ default: m.UploadReports })));
@@ -207,13 +207,11 @@ export default function App() {
             steps={tourSteps}
             run={tourRunning}
             continuous
-            showProgress
-            showSkipButton
-            styles={{
-              options: {
-                primaryColor: '#17413f',
-                zIndex: 10000,
-              },
+            options={{
+              buttons: ['back', 'close', 'primary', 'skip'],
+              showProgress: true,
+              primaryColor: '#17413f',
+              zIndex: 10000,
             }}
           />
 
