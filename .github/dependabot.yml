@@ -9,9 +9,10 @@ updates:
       - "dependencies"
       - "security"
     groups:
-      # react and react-dom must move in lockstep (react-dom pins an exact
-      # react peer), so bump them and their types in a single PR. Splitting
-      # them causes npm ERESOLVE failures in CI.
+      # react-dom declares a peer dependency on a matching react range
+      # (e.g. react-dom@19 requires react@^19), so bumping one without the
+      # other fails npm install with ERESOLVE. Update them and their types
+      # together in a single PR.
       react:
         applies-to: version-updates
         patterns:
