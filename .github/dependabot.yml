@@ -8,6 +8,24 @@ updates:
     labels:
       - "dependencies"
       - "security"
+    groups:
+      # react and react-dom must move in lockstep (react-dom pins an exact
+      # react peer), so bump them and their types in a single PR. Splitting
+      # them causes npm ERESOLVE failures in CI.
+      react:
+        applies-to: version-updates
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      react-security:
+        applies-to: security-updates
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
 
   - package-ecosystem: "npm"
     directory: "/worker"
