@@ -8,6 +8,25 @@ updates:
     labels:
       - "dependencies"
       - "security"
+    groups:
+      # react-dom declares a peer dependency on a matching react range
+      # (e.g. react-dom@19 requires react@^19), so bumping one without the
+      # other fails npm install with ERESOLVE. Update them and their types
+      # together in a single PR.
+      react:
+        applies-to: version-updates
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      react-security:
+        applies-to: security-updates
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
 
   - package-ecosystem: "npm"
     directory: "/worker"
