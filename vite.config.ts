@@ -25,9 +25,11 @@ export default defineConfig({
     target: 'es2020', // removes unnecessary legacy polyfills for modern browsers
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-charts': ['recharts'],
-          'vendor-ui': ['react-joyride'],
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-charts', test: /node_modules[\\/]recharts[\\/]/ },
+            { name: 'vendor-ui', test: /node_modules[\\/]react-joyride[\\/]/ },
+          ],
         },
       },
     },
